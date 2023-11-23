@@ -9,6 +9,11 @@ let mkHTML = flake: ''
         <zero-md style="width: 600pt; margin: auto">
             <script type="text/markdown" data-dedent>
             # Build artifacts
+
+            | Attribute | Link |
+            | --------- | ---- |
+            | blah      | blah |
+
             </script>
         </zero-md>
     </body>
