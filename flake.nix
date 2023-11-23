@@ -21,6 +21,9 @@
         pkgs = import nixpkgs {
           inherit system;
           overlays = [ haskellNix.overlay ];
+          # Also ensure we are using haskellNix config. Otherwise we won't be
+          # selecting the correct wine version for cross compilation.
+          inherit (haskellNix) config;
         };
 
         # If we are building a haskell project (e.g. the current directory)
