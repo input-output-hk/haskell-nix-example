@@ -29,7 +29,7 @@ super: self: {
         };
         in nativePackages.stdenv.mkDerivation {
             name = "${name'}.zip";
-            buildInputs = with nativePackages; [ patchelf zip ];
+            buildInputs = with nativePackages; [ patchelf zip fixup-nix-deps ];
 
             phases = [ "buildPhase" "installPhase" ];
 
