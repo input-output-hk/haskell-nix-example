@@ -10,10 +10,25 @@ let mkHTML = flake: ''
             <script type="text/markdown" data-dedent>
             # Build artifacts
 
-            | Attribute | Link |
-            | --------- | ---- |
-            | blah      | blah |
+            ## Linux builds
+            | Attribute | Architecture | Link |
+            | --------- | ------------ | ---- |
+            ${
+            builtins.concatStringsSep "\n"
+              (map (p: "| ${p.drv.pname} | ${p.drv.stdenv.hostPlatform.system} | <a href=\"./${p.drv.stdenv.hostPlatform.system}/${p.packageName}\">${p.name}</a> |")
+                (builtins.filter (x: x ? isPackage && x.isPackage)
+                  (builtins.attrValues flake.hydraJobs.x86_64-linux ++ builtins.attrValues flake.hydraJobs.aarch64-linux)))
+            }
 
+            ## macOS builds
+            | Attribute | Architecture | Link |
+            | --------- | ------------ | ---- |
+            ${
+            builtins.concatStringsSep "\n"
+              (map (p: "| ${p.drv.pname} | ${p.drv.stdenv.hostPlatform.system} | <a href=\"./${p.packageName}\">${p.name}</a> |")
+                (builtins.filter (x: x ? isPackage && x.isPackage)
+                  (builtins.attrValues flake.hydraJobs.x86_64-darwin ++ builtins.attrValues flake.hydraJobs.aarch64-darwin)))
+            }
             </script>
         </zero-md>
     </body>
@@ -25,10 +40,12 @@ super: self: {
             self.runCommand "index-html" { buildInputs = [  ]; } (''
             mkdir -p $out/nix-support
             cp ${self.writeText "index.html" (mkHTML flake)} $out/index.html
-            ''
-            # TODO: copy stuff into $out/ that we want to reference from the index.html
-            + ''
-            echo "report cardano $out index.html" > $out/nix-support/hydra-build-products
+            ${builtins.concatStringsSep "\n"
+                (map (p: "mkdir -p $out/${p.drv.stdenv.hostPlatform.system} && cp ${p}/${p.packageName} $out/${p.drv.stdenv.hostPlatform.system}/")
+                    (builtins.filter (x: x ? isPackage && x.isPackage)
+                        (builtins.concatMap builtins.attrValues (builtins.attrValues flake.hydraJobs))))
+            }
+            echo "report build-products $out index.html" > $out/nix-support/hydra-build-products
             '');
     };
 }

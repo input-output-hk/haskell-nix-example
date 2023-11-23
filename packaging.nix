@@ -48,6 +48,8 @@ super: self: {
             '';
             passthru = {
                 inherit drv;
+                isPackage = true;
+                packageName = "${drv.name}.zip";
             };
         };
     };
