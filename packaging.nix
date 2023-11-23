@@ -13,6 +13,20 @@ super: self: {
                 "armv7l-linux"  = "/lib/ld-linux-armhf.so.3";
                 "armv7a-linux"  = "/lib/ld-linux-armhf.so.3";
             }; in s.${sys} or (builtins.abort "Unsupported system ${sys}. Supported systms are: ${builtins.concatStringsSep ", " (builtins.attrNames s)}.");
+        fixup-nix-deps = pkgs.writeShellApplication {
+            name = "fixup-nix-deps";
+            text = ''
+            for nixlib in $(otool -L "$1" |awk '/nix\/store/{ print $1 }'); do
+                case "$nixlib" in
+                *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
+                *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
+                *libc++.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libc++.dylib   "$1" ;;
+                *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
+                *) ;;
+                esac
+            done
+            '';
+        };
         in nativePackages.stdenv.mkDerivation {
             name = "${name'}.zip";
             buildInputs = with nativePackages; [ patchelf zip ];
@@ -35,6 +49,13 @@ super: self: {
                 # may need to copy dlls
             '' + pkgs.lib.optionalString (targetPlatform.isLinux && targetPlatform.isGnu) ''
                 # need to copy referenced *.so* files.
+            '' + pkgs.lib.optionalString (targetPlatform.isDarwin) ''
+                for bin in ${name'}/*; do
+                mode=$(stat -f%Lp $bin)
+                chmod +w $bin
+                fixup-nix-deps $bin
+                chmod $mode $bin
+                done
             '';
 
             # compress and put into hydra products

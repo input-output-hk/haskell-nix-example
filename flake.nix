@@ -39,6 +39,20 @@
             iohkNix.overlays.cardano-lib
             iohkNix.overlays.utils
             (import ./packaging.nix)
+            (final: prev: {
+              static-libsodium-vrf = final.libsodium-vrf.overrideDerivation (old: {
+                configureFlags = old.configureFlags ++ [ "--disable-shared" ];
+              });
+              static-secp256k1 = final.secp256k1.overrideDerivation (old: {
+                configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ];
+              });
+              static-gmp = (final.gmp.override { withStatic = true; }).overrideDerivation (old: {
+                configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ];
+              });
+              static-openssl = (final.openssl.override { static = true; });
+              static-zlib = final.zlib.override { shared = false; };
+              static-pcre = final.pcre.override { shared = false; };
+            })
           ];
           # Also ensure we are using haskellNix config. Otherwise we won't be
           # selecting the correct wine version for cross compilation.
@@ -115,7 +129,15 @@
                        Right res -> examineSplice [||res||]
               '')
             ];
-          }];
+          }
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.kupo.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+            ];
+          })];
         };
 
         # for this simple demo, we'll just use a package from hackage. Namely the

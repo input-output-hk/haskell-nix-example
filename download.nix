@@ -25,7 +25,7 @@ let mkHTML = flake: ''
             | --------- | ------------ | ---- |
             ${
             builtins.concatStringsSep "\n"
-              (map (p: "| ${p.drv.pname} | ${p.drv.stdenv.hostPlatform.system} | <a href=\"./${p.packageName}\">${p.name}</a> |")
+              (map (p: "| ${p.drv.pname} | ${p.drv.stdenv.hostPlatform.system} | <a href=\"./${p.drv.stdenv.hostPlatform.system}/${p.packageName}\">${p.name}</a> |")
                 (builtins.filter (x: x ? isPackage && x.isPackage)
                   (builtins.attrValues flake.hydraJobs.x86_64-darwin ++ builtins.attrValues flake.hydraJobs.aarch64-darwin)))
             }
