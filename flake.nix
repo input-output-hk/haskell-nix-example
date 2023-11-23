@@ -29,11 +29,19 @@
 
         # This sets up the `pkgs`, by importing the nixpkgs flake and
         # adding the haskellNix overlay.
+        # We need the iohkNix overlays to get the necessary cryto packages.
+        # secp256k1, blst, and libsodium.
         pkgs = import nixpkgs {
           inherit system;
-          # We need the iohkNix overlays to get the necessary cryto packages.
-          # secp256k1, blst, and libsodium.
-          overlays = with inputs; [ haskellNix.overlay ] ++ builtins.attrValues iohkNix.overlays;
+          overlays = with inputs; [
+            iohkNix.overlays.crypto
+            haskellNix.overlay
+            iohkNix.overlays.haskell-nix-extra
+            iohkNix.overlays.haskell-nix-crypto
+            iohkNix.overlays.cardano-lib
+            iohkNix.overlays.utils
+            (import ./packaging.nix)
+          ];
         };
 
         # If we are building a haskell project (e.g. the current directory)
@@ -183,7 +191,7 @@
         kupoPackages.packages = {
           kupo = (kupoPkgs pkgs).hsPkgs.kupo.components.exes.kupo;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          kupo-static-musl = (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.kupo.components.exes.kupo;
+          kupo-static-musl = pkgs.packaging.asTarball (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.kupo.components.exes.kupo;
           kupo-dynamic     = (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.kupo.components.exes.kupo;
 
           # kupo requires the unix package, so we can't build mingwW64 or ucrt64 really.
