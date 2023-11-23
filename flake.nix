@@ -6,9 +6,20 @@
     haskellNix.url = "github:input-output-hk/haskell.nix";
     # for caching you want to follow haskell.nix's nixpkgs-unstable pins.
     nixpkgs.follows = "haskellNix/nixpkgs-unstable";
+
+    kupo.url = "github:CardanoSolutions/kupo";
+    kupo.flake = false;
+
+    # kupo needs the crypto overlays from iohk-nix
+    iohkNix.url = "github:input-output-hk/iohk-nix";
+    # kupo also needs cardano-haskell-packages
+    CHaP = {
+      url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, haskellNix }:
+  outputs = { self, nixpkgs, flake-utils, haskellNix, ... }@inputs:
     let
       # choose the compiler you want. For now we use ghc963.
       compiler-nix-name = "ghc963";
@@ -20,7 +31,14 @@
         # adding the haskellNix overlay.
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ haskellNix.overlay ];
+          overlays = with inputs; [
+            iohkNix.overlays.crypto
+            haskellNix.overlay
+            iohkNix.overlays.haskell-nix-extra
+            iohkNix.overlays.haskell-nix-crypto
+            iohkNix.overlays.cardano-lib
+            iohkNix.overlays.utils
+          ];
         };
 
         # If we are building a haskell project (e.g. the current directory)
@@ -29,6 +47,71 @@
         hsPkgs = pkgs.haskell-nix.project' {
           inherit compiler-nix-name;
           src = ./.;
+        };
+
+        # If we want to use a source-referenced flake we can do this as well
+        kupoPkgs = pkgs: pkgs.haskell-nix.project' {
+          # kupo builds with 8107
+          compiler-nix-name = "ghc8107";
+          # strip the package.yaml from the source. haskell.nix's tooling will
+          # choke on this special one.
+          src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
+            name = "kupo-src";
+            src = inputs.kupo;
+            filter = path: type:
+              builtins.all (x: x) [
+                (baseNameOf path != "package.yaml")
+              ];
+          };
+          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          sha256map = {
+            "https://github.com/CardanoSolutions/direct-sqlite"."82c5ab46715ecd51901256144f1411b480e2cb8b" = "1r1g6nf65d9n436ppcjky3gkywpnx4y0a3v88ddngchmf8za3qky";
+            "https://github.com/CardanoSolutions/text-ansi"."dd81fe6b30e78e95589b29fd1b7be1c18bd6e700" = "0c9ckqcl4lahmkkfhj95bwwj4l2w8hlw0429gi1yly2mbdb688cq";
+          };
+          modules = [{
+            packages.double-conversion.ghcOptions = [
+              # stop putting U __gxx_personality_v0 into the library!
+              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+              # stop putting U __cxa_guard_release into the library!
+              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            ];
+            packages.plutus-core.patches = [
+              # This patch is needed to fix a build error on aarch64-linux.
+              #
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl> plutus-core/src/PlutusCore/Evaluation/Machine/ExBudgetingDefaults.hs:67:6: error:
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>     • Exception when trying to run compile-time code:
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>         /build/plutus-core-1.5.0.1/plutus-core/src/PlutusCore/Evaluation/Machine: getDirectoryContents:openDirStream: invalid argument (Invalid argument)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>       Code: readJSONFromFile DFP.cekMachineCostsFile
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>     • In the Template Haskell splice
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>         $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>       In the expression: $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>       In an equation for ‘defaultCekMachineCosts’:
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>           defaultCekMachineCosts
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>             = $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>    |
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl> 67 |   $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              (builtins.toFile "plutus-core.patch" ''
+              diff --git a/plutus-core/src/Data/Aeson/THReader.hs b/plutus-core/src/Data/Aeson/THReader.hs
+              index 4b812b3..5290f87 100644
+              --- a/plutus-core/src/Data/Aeson/THReader.hs
+              +++ b/plutus-core/src/Data/Aeson/THReader.hs
+              @@ -5,10 +5,11 @@ import Data.Aeson
+               import Language.Haskell.TH.Syntax
+               import Language.Haskell.TH.Syntax.Compat
+               import TH.RelativePaths
+              +import qualified Data.ByteString.Lazy as LBS
+
+               readJSONFromFile :: (FromJSON a, Lift a) => String -> SpliceQ a
+               readJSONFromFile name = liftSplice $ do
+              -    contents <- qReadFileLBS name
+              +    contents <- qRunIO $ LBS.readFile name
+                   case (eitherDecode contents) of
+                       Left err  -> fail err
+                       Right res -> examineSplice [||res||]
+              '')
+            ];
+          }];
         };
 
         # for this simple demo, we'll just use a package from hackage. Namely the
@@ -102,8 +185,22 @@
             packages.hello-ucrt64 = helloPkg-ucrt64.components.exes.hello;
             packages.hello-javascript = helloPkg-javascript.components.exes.hello;
         };
+        kupoPackages.packages = {
+          kupo = (kupoPkgs pkgs).hsPkgs.kupo.components.exes.kupo;
+        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          kupo-static-musl = (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.kupo.components.exes.kupo;
+          kupo-dynamic     = (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.kupo.components.exes.kupo;
+
+          # kupo requires the unix package, so we can't build mingwW64 or ucrt64 really.
+          # kupo-mingw       = (kupoPkgs pkgs.pkgsCross.mingwW64                  ).hsPkgs.kupo.components.exes.kupo;
+          # however if it didn't, this could be built with 9.4+
+          # kupo-ucrt64 = (kupoPkgs pkgs.pkgsCross.ucrt64).hsPkgs.kupo.components.exes.kupo;
+
+          # and this likely won't work at all due to all the c level dependencies; also we'd want to use 9.6+
+          # kupo-javascript = (kupoPkgs pkgs.pkgsCross.ghcjs).hsPkgs.kupo.components.exes.kupo;
+        };
       # turn them into a merged flake output.
-      in pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages
+      in pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages
     );
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
