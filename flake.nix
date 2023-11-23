@@ -20,11 +20,9 @@
   };
 
   outputs = { self, nixpkgs, flake-utils, haskellNix, ... }@inputs:
-    let
-      # choose the compiler you want. For now we use ghc963.
-      compiler-nix-name = "ghc963";
-    in
-    flake-utils.lib.eachDefaultSystem (system:
+    # choose the compiler you want. For now we use ghc963.
+    let compiler-nix-name = "ghc963"; in
+    let flake = flake-utils.lib.eachDefaultSystem (system:
       let
 
         # This sets up the `pkgs`, by importing the nixpkgs flake and
@@ -192,10 +190,11 @@
             packages.hello-javascript = helloPkg-javascript.components.exes.hello;
         };
         kupoPackages.packages = {
-          kupo = (kupoPkgs pkgs).hsPkgs.kupo.components.exes.kupo;
+          kupo-native            = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-kupo";                                             } (kupoPkgs pkgs                                     ).hsPkgs.kupo.components.exes.kupo;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          kupo-static-musl = pkgs.packaging.asTarball (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.kupo.components.exes.kupo;
-          kupo-dynamic     = (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.kupo.components.exes.kupo;
+          kupo-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-kupo-static";                     } (kupoPkgs pkgs.pkgsCross.musl64                    ).hsPkgs.kupo.components.exes.kupo;
+          kupo-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-kupo-static"; } (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.kupo.components.exes.kupo;
+          kupo-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-kupo";             } (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.kupo.components.exes.kupo;
 
           # kupo requires the unix package, so we can't build mingwW64 or ucrt64 really.
           # kupo-mingw       = (kupoPkgs pkgs.pkgsCross.mingwW64                  ).hsPkgs.kupo.components.exes.kupo;
@@ -210,7 +209,7 @@
         addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
       # turn them into a merged flake output.
       in addHydraJobs (pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages)
-    );
+    ); in flake;
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
     # use zw3rk and iog cache. zw3rk has the haskell.nix artifacts cached.

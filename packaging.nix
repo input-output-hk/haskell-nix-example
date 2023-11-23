@@ -1,8 +1,9 @@
 super: self: {
     packaging = {
-        asTarball = drv:
-        let name = drv.pname or drv.name;
-            pkgs = self;
+        asZip = { name ? null }: drvs:
+        let pkgs = self;
+            drv = if builtins.isList drvs then builtins.head drvs else drvs;
+            name' = if name == null then drv.pname or drv.name else name;
             targetPlatform = drv.stdenv.targetPlatform;
             nativePackages = self.buildPackages;
             interpForSystem = sys: let s = {
@@ -13,18 +14,18 @@ super: self: {
                 "armv7a-linux"  = "/lib/ld-linux-armhf.so.3";
             }; in s.${sys} or (builtins.abort "Unsupported system ${sys}. Supported systms are: ${builtins.concatStringsSep ", " (builtins.attrNames s)}.");
         in nativePackages.stdenv.mkDerivation {
-            name = "${drv.name}-tarball";
+            name = "${name'}.zip";
             buildInputs = with nativePackages; [ patchelf zip ];
 
             phases = [ "buildPhase" "installPhase" ];
 
             buildPhase = ''
-                mkdir -p ${name}
-                cp ${drv.out}/bin/* ${name}/
+                mkdir -p ${name'}
+                cp ${drv.out}/bin/* ${name'}/
             ''
             # set the interpreter to the default expected location on linux. (See interpForSystem above)
             + pkgs.lib.optionalString (targetPlatform.isLinux && targetPlatform.isGnu) ''
-                for bin in ${name}/*; do
+                for bin in ${name'}/*; do
                 mode=$(stat -c%a $bin)
                 chmod +w $bin
                 patchelf --set-interpreter ${interpForSystem targetPlatform.system} $bin
@@ -39,7 +40,7 @@ super: self: {
             # compress and put into hydra products
             installPhase = ''
                 mkdir -p $out/
-                zip -r -9 $out/${drv.name}.zip ${name}
+                zip -r -9 $out/${drv.name}.zip ${name'}
 
                 mkdir -p $out/nix-support
                 echo "file binary-dist \"$(echo $out/*.zip)\"" \
