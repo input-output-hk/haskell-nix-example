@@ -42,6 +42,9 @@
             iohkNix.overlays.utils
             (import ./packaging.nix)
           ];
+          # Also ensure we are using haskellNix config. Otherwise we won't be
+          # selecting the correct wine version for cross compilation.
+          inherit (haskellNix) config;
         };
 
         # If we are building a haskell project (e.g. the current directory)
@@ -202,10 +205,11 @@
           # and this likely won't work at all due to all the c level dependencies; also we'd want to use 9.6+
           # kupo-javascript = (kupoPkgs pkgs.pkgsCross.ghcjs).hsPkgs.kupo.components.exes.kupo;
         };
+
+        # helper function to add `hydraJobs` to the flake output.
+        addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
       # turn them into a merged flake output.
-      in
-        let pkgs' = pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages;
-        in pkgs' // { hydraJobs = pkgs'.packages; }
+      in addHydraJobs (pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages)
     );
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
