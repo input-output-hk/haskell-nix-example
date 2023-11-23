@@ -159,6 +159,58 @@
           sha256map = {
             "https://github.com/CardanoSolutions/ouroboros-consensus"."bf5308b406de74c056cf72c9a78e20b26f96cf88" = "05zxbi6wr76nrnpl1c2r11q5lgf663filynys4r304sb9yr3nxiy";
           };
+          modules = [{
+            packages.double-conversion.ghcOptions = [
+              # stop putting U __gxx_personality_v0 into the library!
+              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+              # stop putting U __cxa_guard_release into the library!
+              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            ];
+            packages.plutus-core.patches = [
+              # This patch is needed to fix a build error on aarch64-linux.
+              #
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl> plutus-core/src/PlutusCore/Evaluation/Machine/ExBudgetingDefaults.hs:67:6: error:
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>     • Exception when trying to run compile-time code:
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>         /build/plutus-core-1.5.0.1/plutus-core/src/PlutusCore/Evaluation/Machine: getDirectoryContents:openDirStream: invalid argument (Invalid argument)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>       Code: readJSONFromFile DFP.cekMachineCostsFile
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>     • In the Template Haskell splice
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>         $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>       In the expression: $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>       In an equation for ‘defaultCekMachineCosts’:
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>           defaultCekMachineCosts
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>             = $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>    |
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl> 67 |   $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              (builtins.toFile "plutus-core.patch" ''
+              diff --git a/plutus-core/src/Data/Aeson/THReader.hs b/plutus-core/src/Data/Aeson/THReader.hs
+              index 4b812b3..5290f87 100644
+              --- a/plutus-core/src/Data/Aeson/THReader.hs
+              +++ b/plutus-core/src/Data/Aeson/THReader.hs
+              @@ -5,10 +5,11 @@ import Data.Aeson
+               import Language.Haskell.TH.Syntax
+               import Language.Haskell.TH.Syntax.Compat
+               import TH.RelativePaths
+              +import qualified Data.ByteString.Lazy as LBS
+
+               readJSONFromFile :: (FromJSON a, Lift a) => String -> SpliceQ a
+               readJSONFromFile name = liftSplice $ do
+              -    contents <- qReadFileLBS name
+              +    contents <- qRunIO $ LBS.readFile name
+                   case (eitherDecode contents) of
+                       Left err  -> fail err
+                       Right res -> examineSplice [||res||]
+              '')
+            ];
+          }
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.kupo.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+            ];
+          })];
         };
         # for this simple demo, we'll just use a package from hackage. Namely the
         # trivial `hello` package. See https://hackage.haskell.org/package/hello
