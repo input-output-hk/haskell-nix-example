@@ -204,8 +204,8 @@
         };
       # turn them into a merged flake output.
       in
-        let pkgs = pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages;
-        in pkgs // { hydraJobs = pkgs; }
+        let pkgs' = pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages;
+        in pkgs' // { hydraJobs = pkgs'; }
     );
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
