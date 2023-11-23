@@ -209,7 +209,7 @@
         addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
       # turn them into a merged flake output.
       in addHydraJobs (pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages)
-    ); in flake;
+    ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; }); lib.recursiveUpdate flake { hydraJobs.index = hydra-utils.mkIndex flake; };
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
     # use zw3rk and iog cache. zw3rk has the haskell.nix artifacts cached.
