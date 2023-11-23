@@ -51,7 +51,7 @@ super: self: {
                 # need to copy referenced *.so* files.
             '' + pkgs.lib.optionalString (targetPlatform.isDarwin) ''
                 for bin in ${name'}/*; do
-                mode=$(stat -f%Lp $bin)
+                mode=$(stat -c%a $bin)
                 chmod +w $bin
                 fixup-nix-deps $bin
                 chmod $mode $bin
