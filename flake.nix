@@ -102,8 +102,10 @@
             packages.hello-ucrt64 = helloPkg-ucrt64.components.exes.hello;
             packages.hello-javascript = helloPkg-javascript.components.exes.hello;
         };
+        # helper function to add `hydraJobs` to the flake output.
+        addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
       # turn them into a merged flake output.
-      in pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages
+      in addHydraJobs (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages)
     );
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
