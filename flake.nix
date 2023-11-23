@@ -203,7 +203,9 @@
           # kupo-javascript = (kupoPkgs pkgs.pkgsCross.ghcjs).hsPkgs.kupo.components.exes.kupo;
         };
       # turn them into a merged flake output.
-      in pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages
+      in
+        let pkgs = pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages;
+        in pkgs // { hydraJobs = pkgs; }
     );
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
