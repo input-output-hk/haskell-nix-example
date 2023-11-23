@@ -31,14 +31,9 @@
         # adding the haskellNix overlay.
         pkgs = import nixpkgs {
           inherit system;
-          overlays = with inputs; [
-            iohkNix.overlays.crypto
-            haskellNix.overlay
-            iohkNix.overlays.haskell-nix-extra
-            iohkNix.overlays.haskell-nix-crypto
-            iohkNix.overlays.cardano-lib
-            iohkNix.overlays.utils
-          ];
+          # We need the iohkNix overlays to get the necessary cryto packages.
+          # secp256k1, blst, and libsodium.
+          overlays = with inputs; [ haskellNix.overlay ] ++ builtins.attrValues iohkNix.overlays;
         };
 
         # If we are building a haskell project (e.g. the current directory)
