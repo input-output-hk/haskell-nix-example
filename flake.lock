@@ -3,11 +3,11 @@
     "CHaP": {
       "flake": false,
       "locked": {
-        "lastModified": 1700639964,
-        "narHash": "sha256-iQ48z5eqSHP8d7B8BBJtnXkVPIKPvdWc0GhIgy4j8cc=",
+        "lastModified": 1700704668,
+        "narHash": "sha256-SI9E5dl3MsN7JXTDgivYJMiF1dXTKxHi1ZOMQr2o5CU=",
         "owner": "input-output-hk",
         "repo": "cardano-haskell-packages",
-        "rev": "eaf713ef8029332b9e4e23685fa157f26086da8b",
+        "rev": "b9f1d1f7f613b49760fb3b9b0212184ccfbc5cf3",
         "type": "github"
       },
       "original": {
@@ -645,6 +645,23 @@
         "type": "github"
       }
     },
+    "ogmios": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1700730333,
+        "narHash": "sha256-BXZ1lX1UdzV5Y9DvIx8663tXpmuEjHVjF4sV4O8L1mk=",
+        "owner": "angerman",
+        "repo": "ogmios",
+        "rev": "4b2c822d6de9195ea4e77bc5824fb4400ba41b06",
+        "type": "github"
+      },
+      "original": {
+        "owner": "angerman",
+        "ref": "patch-1",
+        "repo": "ogmios",
+        "type": "github"
+      }
+    },
     "old-ghc-nix": {
       "flake": false,
       "locked": {
@@ -672,7 +689,8 @@
         "nixpkgs": [
           "haskellNix",
           "nixpkgs-unstable"
-        ]
+        ],
+        "ogmios": "ogmios"
       }
     },
     "secp256k1": {

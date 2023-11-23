@@ -10,24 +10,46 @@ let mkHTML = flake: ''
             <script type="text/markdown" data-dedent>
             # Build artifacts
 
-            ## Linux builds
+            Various build artifacts are available for download. The following table lists all available artifacts. Some are cross-compiled, others are native builds.
+
+            ## Linux builds (x86_64)
             | Attribute | Architecture | Link |
             | --------- | ------------ | ---- |
             ${
             builtins.concatStringsSep "\n"
               (map (p: "| ${p.drv.pname} | ${p.drv.stdenv.hostPlatform.system} | <a href=\"./${p.drv.stdenv.hostPlatform.system}/${p.packageName}\">${p.name}</a> |")
                 (builtins.filter (x: x ? isPackage && x.isPackage)
-                  (builtins.attrValues flake.hydraJobs.x86_64-linux ++ builtins.attrValues flake.hydraJobs.aarch64-linux)))
+                  (builtins.attrValues flake.hydraJobs.x86_64-linux)))
             }
 
-            ## macOS builds
+            ## Linux builds (aarch64)
             | Attribute | Architecture | Link |
             | --------- | ------------ | ---- |
             ${
             builtins.concatStringsSep "\n"
               (map (p: "| ${p.drv.pname} | ${p.drv.stdenv.hostPlatform.system} | <a href=\"./${p.drv.stdenv.hostPlatform.system}/${p.packageName}\">${p.name}</a> |")
                 (builtins.filter (x: x ? isPackage && x.isPackage)
-                  (builtins.attrValues flake.hydraJobs.x86_64-darwin ++ builtins.attrValues flake.hydraJobs.aarch64-darwin)))
+                  (builtins.attrValues flake.hydraJobs.aarch64-linux)))
+            }
+
+            ## macOS builds (Intel)
+            | Attribute | Architecture | Link |
+            | --------- | ------------ | ---- |
+            ${
+            builtins.concatStringsSep "\n"
+              (map (p: "| ${p.drv.pname} | ${p.drv.stdenv.hostPlatform.system} | <a href=\"./${p.drv.stdenv.hostPlatform.system}/${p.packageName}\">${p.name}</a> |")
+                (builtins.filter (x: x ? isPackage && x.isPackage)
+                  (builtins.attrValues flake.hydraJobs.x86_64-darwin)))
+            }
+
+            ## macOS builds (Apple Silicon)
+            | Attribute | Architecture | Link |
+            | --------- | ------------ | ---- |
+            ${
+            builtins.concatStringsSep "\n"
+              (map (p: "| ${p.drv.pname} | ${p.drv.stdenv.hostPlatform.system} | <a href=\"./${p.drv.stdenv.hostPlatform.system}/${p.packageName}\">${p.name}</a> |")
+                (builtins.filter (x: x ? isPackage && x.isPackage)
+                  (builtins.attrValues flake.hydraJobs.aarch64-darwin)))
             }
             </script>
         </zero-md>

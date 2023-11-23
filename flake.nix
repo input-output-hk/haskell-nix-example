@@ -10,6 +10,9 @@
     kupo.url = "github:CardanoSolutions/kupo";
     kupo.flake = false;
 
+    ogmios.url = "github:angerman/ogmios?ref=patch-1";
+    ogmios.flake = false;
+
     # kupo needs the crypto overlays from iohk-nix
     iohkNix.url = "github:input-output-hk/iohk-nix";
     # kupo also needs cardano-haskell-packages
@@ -139,7 +142,24 @@
             ];
           })];
         };
-
+        ogmiosPkgs = pkgs: pkgs.haskell-nix.project' {
+          # kupo builds with 8107
+          compiler-nix-name = "ghc8107";
+          # strip the package.yaml from the source. haskell.nix's tooling will
+          # choke on this special one.
+          src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
+            name = "ogmios-src";
+            src = "${inputs.ogmios}/server";
+            filter = path: type:
+              builtins.all (x: x) [
+                (baseNameOf path != "package.yaml")
+              ];
+          };
+          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          sha256map = {
+            "https://github.com/CardanoSolutions/ouroboros-consensus"."bf5308b406de74c056cf72c9a78e20b26f96cf88" = "05zxbi6wr76nrnpl1c2r11q5lgf663filynys4r304sb9yr3nxiy";
+          };
+        };
         # for this simple demo, we'll just use a package from hackage. Namely the
         # trivial `hello` package. See https://hackage.haskell.org/package/hello
         helloPkg = pkgs.haskell-nix.hackage-package {
@@ -227,10 +247,15 @@
           # kupo-javascript = (kupoPkgs pkgs.pkgsCross.ghcjs).hsPkgs.kupo.components.exes.kupo;
         };
 
+        # Ogmios
+        ogmiosPackages.packages = {
+          ogmios-native       = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-ogmios";                                             } (ogmiosPkgs pkgs                                     ).hsPkgs.ogmios.components.exes.ogmios;
+        };
+
         # helper function to add `hydraJobs` to the flake output.
         addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
       # turn them into a merged flake output.
-      in addHydraJobs (pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages)
+      in addHydraJobs (pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages) ogmiosPackages)
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; }); lib.recursiveUpdate flake { hydraJobs.index = hydra-utils.mkIndex flake; };
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
