@@ -648,16 +648,15 @@
     "ogmios": {
       "flake": false,
       "locked": {
-        "lastModified": 1700730333,
+        "lastModified": 1700736763,
         "narHash": "sha256-BXZ1lX1UdzV5Y9DvIx8663tXpmuEjHVjF4sV4O8L1mk=",
-        "owner": "angerman",
+        "owner": "CardanoSolutions",
         "repo": "ogmios",
-        "rev": "4b2c822d6de9195ea4e77bc5824fb4400ba41b06",
+        "rev": "199daf67062e7c9efa735a0ba7d80d49108a56a0",
         "type": "github"
       },
       "original": {
-        "owner": "angerman",
-        "ref": "patch-1",
+        "owner": "CardanoSolutions",
         "repo": "ogmios",
         "type": "github"
       }

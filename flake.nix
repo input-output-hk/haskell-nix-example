@@ -10,7 +10,7 @@
     kupo.url = "github:CardanoSolutions/kupo";
     kupo.flake = false;
 
-    ogmios.url = "github:angerman/ogmios?ref=patch-1";
+    ogmios.url = "github:CardanoSolutions/ogmios";
     ogmios.flake = false;
 
     # kupo needs the crypto overlays from iohk-nix
@@ -156,9 +156,6 @@
               ];
           };
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
-          sha256map = {
-            "https://github.com/CardanoSolutions/ouroboros-consensus"."bf5308b406de74c056cf72c9a78e20b26f96cf88" = "05zxbi6wr76nrnpl1c2r11q5lgf663filynys4r304sb9yr3nxiy";
-          };
           modules = [{
             packages.double-conversion.ghcOptions = [
               # stop putting U __gxx_personality_v0 into the library!
