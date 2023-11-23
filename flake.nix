@@ -249,7 +249,11 @@
 
         # Ogmios
         ogmiosPackages.packages = {
-          ogmios-native       = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-ogmios";                                             } (ogmiosPkgs pkgs                                     ).hsPkgs.ogmios.components.exes.ogmios;
+          ogmios-native       = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-ogmios";                                                  } (ogmiosPkgs pkgs                                     ).hsPkgs.ogmios.components.exes.ogmios;
+        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          ogmios-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-ogmios-static";                     } (ogmiosPkgs pkgs.pkgsCross.musl64                    ).hsPkgs.ogmios.components.exes.ogmios;
+          ogmios-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-ogmios-static"; } (ogmiosPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.ogmios.components.exes.ogmios;
+          ogmios-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-ogmios";             } (ogmiosPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.ogmios.components.exes.ogmios;
         };
 
         # helper function to add `hydraJobs` to the flake output.
