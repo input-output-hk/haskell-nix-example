@@ -209,11 +209,11 @@
     "hackage": {
       "flake": false,
       "locked": {
-        "lastModified": 1700439793,
-        "narHash": "sha256-SjOHopUggIanCVG8DBoNT3Dr5glVpeD/GZppoea6gYc=",
+        "lastModified": 1701130974,
+        "narHash": "sha256-0ykM3chRG8TXHhfEytU1IerNq5vN5rluaOnLNCJUZ6s=",
         "owner": "input-output-hk",
         "repo": "hackage.nix",
-        "rev": "672483a2719d8cc24d65fa0ec66e2532aabeee3a",
+        "rev": "618294813c33cc6c8b98c1ec5570bc48864b13ec",
         "type": "github"
       },
       "original": {
@@ -257,15 +257,16 @@
         "stackage": "stackage"
       },
       "locked": {
-        "lastModified": 1700697612,
-        "narHash": "sha256-TGgS32khfDoBR6P43yyYNRwAYBrYeRJCX7f9+aubf4M=",
+        "lastModified": 1701176113,
+        "narHash": "sha256-aQX5M5o0/ddqEOXNF95qu37tsJPFT7GfvnoJaFfbvKM=",
         "owner": "input-output-hk",
         "repo": "haskell.nix",
-        "rev": "aaff3ff31a68808849a856633b73d83855c4c344",
+        "rev": "3beec3b7b19b2e35502f2232b977de1cffa6e07e",
         "type": "github"
       },
       "original": {
         "owner": "input-output-hk",
+        "ref": "angerman/fix-aarch64-musl",
         "repo": "haskell.nix",
         "type": "github"
       }
@@ -392,6 +393,22 @@
       "original": {
         "id": "hydra",
         "type": "indirect"
+      }
+    },
+    "hydra_2": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1701155396,
+        "narHash": "sha256-/3wxJvKq3KfKAtb9doIuGZM4e+WNDv8jHHA0ksTniJ4=",
+        "owner": "input-output-hk",
+        "repo": "hydra",
+        "rev": "60aac8c8718ffb069cd3a38c8baf88199e477de2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "input-output-hk",
+        "repo": "hydra",
+        "type": "github"
       }
     },
     "iohkNix": {
@@ -683,6 +700,7 @@
         "CHaP": "CHaP",
         "flake-utils": "flake-utils",
         "haskellNix": "haskellNix",
+        "hydra": "hydra_2",
         "iohkNix": "iohkNix",
         "kupo": "kupo",
         "nixpkgs": [
@@ -729,11 +747,11 @@
     "stackage": {
       "flake": false,
       "locked": {
-        "lastModified": 1700438989,
-        "narHash": "sha256-x+7Qtboko7ds8CU8pq2sIZiD45DauYoX9LxBfwQr/hs=",
+        "lastModified": 1701130167,
+        "narHash": "sha256-Mdzljtmfe6lg8lo7BAMXPRay0fH17MVoBQJBPzt3s+w=",
         "owner": "input-output-hk",
         "repo": "stackage.nix",
-        "rev": "9c2015334cc77837b8454b3b10ef4f711a256f6f",
+        "rev": "4396102706df8636afae08806984e03f4afd381e",
         "type": "github"
       },
       "original": {
