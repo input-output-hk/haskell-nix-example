@@ -4,6 +4,11 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     haskellNix.url = "github:input-output-hk/haskell.nix?ref=angerman/fix-aarch64-musl";
+    iserv-proxy = {
+      url = "github:stable-haskell/iserv-proxy?ref=iserv-syms";
+      flake = false;
+    };
+    haskellNix.inputs.iserv-proxy.follows = "iserv-proxy";
     # for caching you want to follow haskell.nix's nixpkgs-unstable pins.
     nixpkgs.follows = "haskellNix/nixpkgs-unstable";
 
@@ -261,9 +266,28 @@
                        Right res -> examineSplice [||res||]
               '')
             ];
+            packages.gitrev.patches = [
+              (builtins.toFile "gitrev.patch" ''
+              diff --git a/src/Development/GitRev.hs b/src/Development/GitRev.hs
+              index b664692..603ad1b 100644
+              --- a/src/Development/GitRev.hs
+              +++ b/src/Development/GitRev.hs
+              @@ -62,7 +62,9 @@ runGit :: [String] -> String -> IndexUsed -> Q String
+               runGit args def useIdx = do
+                 let oops :: SomeException -> IO (ExitCode, String, String)
+                     oops _e = return (ExitFailure 1, def, "")
+              +      none :: SomeException -> IO (Maybe FilePath)
+              +      none _e = return Nothing
+              -  gitFound <- runIO $ isJust <$> findExecutable "git"
+              +  gitFound <- runIO $ isJust <$> findExecutable "git" `catch` none
+                 if gitFound
+                   then do
+                     -- a lot of bookkeeping to record the right dependencies
+              '')
+            ];
           }
           (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
-            packages.kupo.ghcOptions = with pkgs; [
+            packages.hydra-node.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
                 "-L${lib.getLib static-libsodium-vrf}/lib"
                 "-L${lib.getLib static-secp256k1}/lib"

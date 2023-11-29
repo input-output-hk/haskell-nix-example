@@ -241,7 +241,9 @@
         "hls-2.4": "hls-2.4",
         "hpc-coveralls": "hpc-coveralls",
         "hydra": "hydra",
-        "iserv-proxy": "iserv-proxy",
+        "iserv-proxy": [
+          "iserv-proxy"
+        ],
         "nixpkgs": [
           "haskellNix",
           "nixpkgs-unstable"
@@ -257,11 +259,11 @@
         "stackage": "stackage"
       },
       "locked": {
-        "lastModified": 1701238035,
-        "narHash": "sha256-G4Aw4FHKb8Z3SI/KRTsr76u/hRmprRPCjHaeOBUOr3U=",
+        "lastModified": 1701242296,
+        "narHash": "sha256-Zc/iI9aDdHLXxEQ6TzQ/IkOqfONlEvEJCNIekXgMFUs=",
         "owner": "input-output-hk",
         "repo": "haskell.nix",
-        "rev": "526c4fb4929d882efc538052720789b021dc5b85",
+        "rev": "1a767102f2b67dc8d72f6617063ee380ad4a4355",
         "type": "github"
       },
       "original": {
@@ -435,11 +437,11 @@
     "iserv-proxy": {
       "flake": false,
       "locked": {
-        "lastModified": 1701237406,
-        "narHash": "sha256-+TXtUIAoCRLLsbsRxmNb/jcA2L70nCQcv4dPXKU5XTo=",
+        "lastModified": 1701243586,
+        "narHash": "sha256-aUtjD2vgPe/aQ2+W10KfKW2N0Elc145pbHq4pFMccjY=",
         "owner": "stable-haskell",
         "repo": "iserv-proxy",
-        "rev": "0ef42dcea27c8b68bb5a05f6a2278858d8011a4d",
+        "rev": "94fb984525299d650485b1fa44b2ba163e5f8162",
         "type": "github"
       },
       "original": {
@@ -702,6 +704,7 @@
         "haskellNix": "haskellNix",
         "hydra": "hydra_2",
         "iohkNix": "iohkNix",
+        "iserv-proxy": "iserv-proxy",
         "kupo": "kupo",
         "nixpkgs": [
           "haskellNix",
