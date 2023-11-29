@@ -143,7 +143,16 @@
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
             ];
-          })];
+          })
+          # Fix compilation with newer ghc versions
+          ({ lib, config, ... }:
+            lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
+            # lib:ghc is a bit annoying in that it comes with it's own build-type:Custom, and then tries
+            # to call out to all kinds of silly tools that GHC doesn't really provide.
+            # For this reason, we try to get away without re-installing lib:ghc for now.
+            reinstallableLibGhc = false;
+          })
+          ];
         };
         ogmiosPkgs = pkgs: pkgs.haskell-nix.project' {
           # kupo builds with 8107
