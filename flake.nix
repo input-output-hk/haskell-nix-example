@@ -60,6 +60,7 @@
               static-gmp = (final.gmp.override { withStatic = true; }).overrideDerivation (old: {
                 configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ];
               });
+              static-libblst = (final.libblst.override { enableShared = false; });
               static-openssl = (final.openssl.override { static = true; });
               static-zlib = final.zlib.override { shared = false; };
               static-pcre = final.pcre.override { shared = false; };
@@ -292,6 +293,7 @@
                 "-L${lib.getLib static-libsodium-vrf}/lib"
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
             ];
           })
           # Fix compilation with newer ghc versions
