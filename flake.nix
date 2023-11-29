@@ -60,7 +60,9 @@
               static-gmp = (final.gmp.override { withStatic = true; }).overrideDerivation (old: {
                 configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ];
               });
-              static-libblst = (final.libblst.override { enableShared = false; });
+              static-libblst = (final.libblst.override { enableShared = false; }).overrideDerivation (old: {
+                postFixup = "";
+              });
               static-openssl = (final.openssl.override { static = true; });
               static-zlib = final.zlib.override { shared = false; };
               static-pcre = final.pcre.override { shared = false; };
