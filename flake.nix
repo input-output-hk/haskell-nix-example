@@ -21,6 +21,9 @@
     hydra.url = "github:input-output-hk/hydra";
     hydra.flake = false;
 
+    db-sync.url = "github:input-output-hk/cardano-db-sync";
+    db-sync.flake = false;
+
     # kupo needs the crypto overlays from iohk-nix
     iohkNix.url = "github:input-output-hk/iohk-nix";
     # kupo also needs cardano-haskell-packages
@@ -333,6 +336,20 @@
           })
           ];
         };
+        dbSyncPkg = pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc963";
+          src = inputs.db-sync;
+
+          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          modules = [{
+            packages.double-conversion.ghcOptions = [
+              # stop putting U __gxx_personality_v0 into the library!
+              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+              # stop putting U __cxa_guard_release into the library!
+              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            ];
+          }];
+        };
         # for this simple demo, we'll just use a package from hackage. Namely the
         # trivial `hello` package. See https://hackage.haskell.org/package/hello
         helloPkg = pkgs.haskell-nix.hackage-package {
@@ -437,13 +454,22 @@
           hydra-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-hydra-node";             } (hydraPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.hydra-node.components.exes.hydra-node;
         };
 
+        dbSyncPackages.packages = {
+          db-sync            = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync";                                                  } (dbSyncPkg pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          db-sync-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-static";                     } (dbSyncPkg pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-db-sync-static"; } (dbSyncPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync";             } (dbSyncPkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        };
+
         # helper function to add `hydraJobs` to the flake output.
         addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
       # turn them into a merged flake output.
       in addHydraJobs (pkgs.lib.recursiveUpdate
+                       (pkgs.lib.recursiveUpdate
                         (pkgs.lib.recursiveUpdate
                          (pkgs.lib.recursiveUpdate
-                          (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages) ogmiosPackages) hydraPackages)
+                          (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages) ogmiosPackages) hydraPackages) dbSyncPackages)
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; }); lib.recursiveUpdate flake { hydraJobs.index = hydra-utils.mkIndex flake; };
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {

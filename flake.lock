@@ -117,6 +117,22 @@
         "type": "github"
       }
     },
+    "db-sync": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1700144834,
+        "narHash": "sha256-clkh6+DphNcSk+MS8wYSyyeHTiiOs5/orJtb149DnS0=",
+        "owner": "input-output-hk",
+        "repo": "cardano-db-sync",
+        "rev": "86f41634dcfc38d669e2f188ecddeaae425a7bef",
+        "type": "github"
+      },
+      "original": {
+        "owner": "input-output-hk",
+        "repo": "cardano-db-sync",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -700,6 +716,7 @@
     "root": {
       "inputs": {
         "CHaP": "CHaP",
+        "db-sync": "db-sync",
         "flake-utils": "flake-utils",
         "haskellNix": "haskellNix",
         "hydra": "hydra_2",
