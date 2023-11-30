@@ -245,6 +245,46 @@
               # stop putting U __cxa_guard_release into the library!
               "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
             ];
+            packages.gitrev.patches = [
+              (builtins.toFile "gitrev.patch" ''
+              diff --git a/src/Development/GitRev.hs b/src/Development/GitRev.hs
+              index b664692..603ad1b 100644
+              --- a/src/Development/GitRev.hs
+              +++ b/src/Development/GitRev.hs
+              @@ -62,7 +62,9 @@ runGit :: [String] -> String -> IndexUsed -> Q String
+               runGit args def useIdx = do
+                 let oops :: SomeException -> IO (ExitCode, String, String)
+                     oops _e = return (ExitFailure 1, def, "")
+              +      none :: SomeException -> IO (Maybe FilePath)
+              +      none _e = return Nothing
+              -  gitFound <- runIO $ isJust <$> findExecutable "git"
+              +  gitFound <- runIO $ isJust <$> findExecutable "git" `catch` none
+                 if gitFound
+                   then do
+                     -- a lot of bookkeeping to record the right dependencies
+              '')
+            ];
+          }
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.hydra-node.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+            ];
+          })
+          (pkgs.lib.mkIf (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) {
+            # this will disable --split-sections. Having --split-sections on will
+            # break the linker in GHC. And thus make iserv (e.g. aarch64-linux-musl)
+            # break during cross compilation. The UntypedPlutusCore.Evaluation.Machine.Cek.CekMachineCosts
+            # will produce an almost 1MB object file, with an unholy amount of sections. The linker is sadly
+            # quite stupid and maps each section into a page (4k on linux, 16k on darwin), and this quickly
+            # leads to sections being so far apart, that the linker can't relocate the entries properly
+            # anymore. To work around this, we disable --split-sections for plutus-core.
+            # TODO: fix GHC's linker properly.
+            packages.plutus-core.components.library.enableDeadCodeElimination = false;
+
             packages.plutus-core.patches = [
               # This patch is needed to fix a build error on aarch64-linux.
               #
@@ -280,34 +320,6 @@
                        Left err  -> fail err
                        Right res -> examineSplice [||res||]
               '')
-            ];
-            packages.gitrev.patches = [
-              (builtins.toFile "gitrev.patch" ''
-              diff --git a/src/Development/GitRev.hs b/src/Development/GitRev.hs
-              index b664692..603ad1b 100644
-              --- a/src/Development/GitRev.hs
-              +++ b/src/Development/GitRev.hs
-              @@ -62,7 +62,9 @@ runGit :: [String] -> String -> IndexUsed -> Q String
-               runGit args def useIdx = do
-                 let oops :: SomeException -> IO (ExitCode, String, String)
-                     oops _e = return (ExitFailure 1, def, "")
-              +      none :: SomeException -> IO (Maybe FilePath)
-              +      none _e = return Nothing
-              -  gitFound <- runIO $ isJust <$> findExecutable "git"
-              +  gitFound <- runIO $ isJust <$> findExecutable "git" `catch` none
-                 if gitFound
-                   then do
-                     -- a lot of bookkeeping to record the right dependencies
-              '')
-            ];
-          }
-          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
-            packages.hydra-node.ghcOptions = with pkgs; [
-                "-L${lib.getLib static-gmp}/lib"
-                "-L${lib.getLib static-libsodium-vrf}/lib"
-                "-L${lib.getLib static-secp256k1}/lib"
-                "-L${lib.getLib static-openssl}/lib"
-                "-L${lib.getLib static-libblst}/lib"
             ];
           })
           # Fix compilation with newer ghc versions
