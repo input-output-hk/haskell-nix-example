@@ -284,6 +284,7 @@
             # anymore. To work around this, we disable --split-sections for plutus-core.
             # TODO: fix GHC's linker properly.
             packages.plutus-core.components.library.enableDeadCodeElimination = false;
+            packages.plutus-tx.components.library.enableDeadCodeElimination = false;
 
             packages.plutus-core.patches = [
               # This patch is needed to fix a build error on aarch64-linux.
