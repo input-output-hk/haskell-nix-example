@@ -24,6 +24,9 @@
     db-sync.url = "github:input-output-hk/cardano-db-sync";
     db-sync.flake = false;
 
+    encoins.url = "github:encryptedcoins/encoins-relay";
+    encoins.flake = false;
+
     # kupo needs the crypto overlays from iohk-nix
     iohkNix.url = "github:input-output-hk/iohk-nix";
     # kupo also needs cardano-haskell-packages
@@ -359,6 +362,27 @@
           })
           ];
         };
+
+        encoinsPkg = pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc8107";
+          src = inputs.encoins;
+
+          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+
+          sha256map = {
+            "https://github.com/encryptedcoins/cardano-server"."eae2d8293162bb399e8136bd5b4e54f8fd5488d3" = "0af98y93cv8kw5jl05vy4nm12sh6lhwm4lcnj4wyvyyyjly4jw9k";
+            "https://github.com/encryptedcoins/plutus-tx-extra.git"."8c54d7f687fcf49011d7aa0961d99fc88019797e" = "04h8spwqjdni860i995gfxiw5jrzkrw49dcj9l1dghgwsyg5vpiq";
+            "https://github.com/encryptedcoins/plutus-apps-extra"."e851968778019a1a7be8ee73d9f9f0963f56cd90" = "09vsjk2gmnrcbl1jk6brw46pnlafmp64mx99r9ndxqg232599nay";
+            "https://github.com/encryptedcoins/csl-types.git"."0587b018a1cd905c129cc1420b7a2027ee988e8e" = "0prr6941z3a78fvvk8h2d5bxag5jk2w1gc0hqszid2zm7zmlvi2p";
+            "https://github.com/encryptedcoins/encoins-bulletproofs"."f62ea3caf1490df449474b5e87577e037206c546" = "1c5s6dw06gs1p4ixa1wnzy815zaakvjmc1yxm5rmm4p6lj9j58df";
+            "https://github.com/encryptedcoins/encoins-core.git"."d89301187aecadb0274dbb8cdd8f5d93a7287130" = "0dah8b0gpzxax19d27vmdja81xyl9f5fsdgpw8w3hxfml1zmjacz";
+            "https://github.com/input-output-hk/plutus-apps"."68efca7eda4afd1c14698adf697d70acb5a489e2" = "1ng8h0njfc4lrrvlpd6a05019ap79h861nn5zx3rnhg59i8j2wjm";
+            "https://github.com/input-output-hk/cardano-wallet"."18a931648550246695c790578d4a55ee2f10463e" = "0i40hp1mdbljjcj4pn3n6zahblkb2jmpm8l4wnb36bya1pzf66fx";
+            "https://github.com/Quviq/quickcheck-contractmodel"."cc43f13f98c704e0d53dbdef6a98367918f8c5c1" = "1ya604zn6jaq2qis1qgrlc21q08a7qmwwaj19f9m86y6dmvq5gk5";
+            "https://github.com/input-output-hk/cardano-addresses"."b7273a5d3c21f1a003595ebf1e1f79c28cd72513" = "129r5kyiw10n2021bkdvnr270aiiwyq58h472d151ph0r7wpslgp";
+            "https://github.com/input-output-hk/cardano-ledger"."da3e9ae10cf9ef0b805a046c84745f06643583c2" = "1jg1h05gcms119mw7fz798xpj3hr5h426ga934vixmgf88m1jmfx";
+          };
+        };
         # for this simple demo, we'll just use a package from hackage. Namely the
         # trivial `hello` package. See https://hackage.haskell.org/package/hello
         helloPkg = pkgs.haskell-nix.hackage-package {
@@ -457,6 +481,7 @@
 
         hydraPackages.packages = {
           hydra-native       = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-hydra-node";                                                  } (hydraPkgs pkgs                                     ).hsPkgs.hydra-node.components.exes.hydra-node;
+          plutus-tx-plugin   = (hydraPkgs pkgs).hsPkgs.plutus-tx-plugin.components.library;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           hydra-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-hydra-node-static";                     } (hydraPkgs pkgs.pkgsCross.musl64                    ).hsPkgs.hydra-node.components.exes.hydra-node;
           hydra-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-hydra-node-static"; } (hydraPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.hydra-node.components.exes.hydra-node;
@@ -471,6 +496,14 @@
           db-sync-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync";             } (dbSyncPkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         };
 
+        encoinsPackages.packages = {
+          encoins-relay-server = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-encoins-relay-server"; } (encoinsPkg pkgs).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
+        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          encoins-relay-server-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-encoins-relay-server-static";                     } (encoinsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
+          encoins-relay-server-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-encoins-relay-server-static"; } (encoinsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
+          encoins-relay-server-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-encoins-relay-server";             } (encoinsPkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
+        };
+
         # helper function to add `hydraJobs` to the flake output.
         addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
       # turn them into a merged flake output.
@@ -478,7 +511,8 @@
                        (pkgs.lib.recursiveUpdate
                         (pkgs.lib.recursiveUpdate
                          (pkgs.lib.recursiveUpdate
-                          (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages) ogmiosPackages) hydraPackages) dbSyncPackages)
+                          (pkgs.lib.recursiveUpdate
+                           (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages) ogmiosPackages) hydraPackages) dbSyncPackages) encoinsPackages)
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; }); lib.recursiveUpdate flake { hydraJobs.index = hydra-utils.mkIndex flake; };
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {

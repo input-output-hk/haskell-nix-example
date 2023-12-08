@@ -133,6 +133,22 @@
         "type": "github"
       }
     },
+    "encoins": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1701258184,
+        "narHash": "sha256-s5AgjAfFQlW2CcYB7Z/he2HhSJMZqn49h91YhtPzVdQ=",
+        "owner": "encryptedcoins",
+        "repo": "encoins-relay",
+        "rev": "173632f2b8d0cc171a02995df79dda8000f402f9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "encryptedcoins",
+        "repo": "encoins-relay",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -717,6 +733,7 @@
       "inputs": {
         "CHaP": "CHaP",
         "db-sync": "db-sync",
+        "encoins": "encoins",
         "flake-utils": "flake-utils",
         "haskellNix": "haskellNix",
         "hydra": "hydra_2",
