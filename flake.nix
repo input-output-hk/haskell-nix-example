@@ -24,8 +24,11 @@
     db-sync.url = "github:input-output-hk/cardano-db-sync";
     db-sync.flake = false;
 
-    encoins.url = "github:encryptedcoins/encoins-relay";
+    encoins.url = "github:angerman/encoins-relay?ref=buildfixes";
     encoins.flake = false;
+
+    cardano-node.url = "github:input-output-hk/cardano-node?ref=8.7.2";
+    cardano-node.flake = false;
 
     # kupo needs the crypto overlays from iohk-nix
     iohkNix.url = "github:input-output-hk/iohk-nix";
@@ -62,6 +65,9 @@
               });
               static-secp256k1 = final.secp256k1.overrideDerivation (old: {
                 configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ];
+              });
+              dyn-static-secp256k1 = final.secp256k1.overrideDerivation (old: {
+                configureFlags = old.configureFlags ++ ["--enable-static" "--enable-shared" ];
               });
               static-gmp = (final.gmp.override { withStatic = true; }).overrideDerivation (old: {
                 configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ];
@@ -173,7 +179,7 @@
           ];
         };
         ogmiosPkgs = pkgs: pkgs.haskell-nix.project' {
-          # kupo builds with 8107
+          # ogmios builds with 8107
           compiler-nix-name = "ghc8107";
           # strip the package.yaml from the source. haskell.nix's tooling will
           # choke on this special one.
@@ -281,6 +287,34 @@
             ];
           })
           (pkgs.lib.mkIf (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) {
+            packages.plutus-tx.patches = [
+              (builtins.toFile "plutus-tx.patch" ''
+              From 895a8a4af848ec29f9165fbff585f391d2c3358b Mon Sep 17 00:00:00 2001
+              From: Moritz Angermann <moritz.angermann@gmail.com>
+              Date: Sun, 10 Dec 2023 16:23:24 +0800
+              Subject: [PATCH] Update TH.hs
+
+              Just don't force load it.
+              ---
+              src/PlutusTx/TH.hs | 1 -
+              1 file changed, 1 deletion(-)
+
+              diff --git a/src/PlutusTx/TH.hs b/src/PlutusTx/TH.hs
+              index 49f26f6585e..02a0f927dd5 100644
+              --- a/src/PlutusTx/TH.hs
+              +++ b/src/PlutusTx/TH.hs
+              @@ -46,7 +46,6 @@ going to typecheck, and the result is always a 'CompiledCode', so that's also fi
+               -- | Compile a quoted Haskell expression into a corresponding Plutus Core program.
+               compileUntyped :: TH.Q TH.Exp -> TH.Q TH.Exp
+               compileUntyped e = do
+              -    TH.addCorePlugin "PlutusTx.Plugin"
+                   loc <- TH.location
+                   let locStr = TH.pprint loc
+                   -- See note [Typed TH]
+              '')
+            ];
+          })
+          (pkgs.lib.mkIf (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) {
             # this will disable --split-sections. Having --split-sections on will
             # break the linker in GHC. And thus make iserv (e.g. aarch64-linux-musl)
             # break during cross compilation. The UntypedPlutusCore.Evaluation.Machine.Cek.CekMachineCosts
@@ -337,6 +371,12 @@
             # For this reason, we try to get away without re-installing lib:ghc for now.
             reinstallableLibGhc = false;
           })
+          ({ lib, pkgs, ... }: {
+            # This is primarily here, so that we can _force_ static/also dependencies, which then hopefully get rolled into the
+            # -staticlib of the plutus-tx-plugin 😓.
+            packages.cardano-crypto-praos.components.library.pkgconfig = lib.mkForce [ [ pkgs.libsodium-vrf ] ];
+            packages.cardano-crypto-class.components.library.pkgconfig = lib.mkForce [ [ pkgs.libsodium-vrf pkgs.dyn-static-secp256k1 pkgs.libblst ] ];
+          })
           ];
         };
         dbSyncPkg = pkgs: pkgs.haskell-nix.project' {
@@ -364,15 +404,23 @@
         };
 
         encoinsPkg = pkgs: pkgs.haskell-nix.project' {
+          cabalProjectLocal = ''
+          package postgres-libpq
+            flags: +use-pkg-config
+          '';
           compiler-nix-name = "ghc8107";
-          src = inputs.encoins;
+          src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
+            name = "encoins-src";
+            src = inputs.encoins;
+          };
 
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
 
           sha256map = {
             "https://github.com/encryptedcoins/cardano-server"."eae2d8293162bb399e8136bd5b4e54f8fd5488d3" = "0af98y93cv8kw5jl05vy4nm12sh6lhwm4lcnj4wyvyyyjly4jw9k";
+            "https://github.com/encryptedcoins/cardano-server"."0b5cb40a96c2ee15411706eae5c4354e7acf0324" = "0wnzd54q1z5a4w5cy0q1anyvzcmd1yg22wj6amjv2raqshvzwndj";
             "https://github.com/encryptedcoins/plutus-tx-extra.git"."8c54d7f687fcf49011d7aa0961d99fc88019797e" = "04h8spwqjdni860i995gfxiw5jrzkrw49dcj9l1dghgwsyg5vpiq";
-            "https://github.com/encryptedcoins/plutus-apps-extra"."e851968778019a1a7be8ee73d9f9f0963f56cd90" = "09vsjk2gmnrcbl1jk6brw46pnlafmp64mx99r9ndxqg232599nay";
+            "https://github.com/encryptedcoins/plutus-apps-extra"."0cbc7f4ae053765ad006c178132820df9e3c4f06" = "02fzf43kkyfi4p0aqsp70v9c19pr482zn436dqxfg76fvd280i3l";
             "https://github.com/encryptedcoins/csl-types.git"."0587b018a1cd905c129cc1420b7a2027ee988e8e" = "0prr6941z3a78fvvk8h2d5bxag5jk2w1gc0hqszid2zm7zmlvi2p";
             "https://github.com/encryptedcoins/encoins-bulletproofs"."f62ea3caf1490df449474b5e87577e037206c546" = "1c5s6dw06gs1p4ixa1wnzy815zaakvjmc1yxm5rmm4p6lj9j58df";
             "https://github.com/encryptedcoins/encoins-core.git"."d89301187aecadb0274dbb8cdd8f5d93a7287130" = "0dah8b0gpzxax19d27vmdja81xyl9f5fsdgpw8w3hxfml1zmjacz";
@@ -382,6 +430,51 @@
             "https://github.com/input-output-hk/cardano-addresses"."b7273a5d3c21f1a003595ebf1e1f79c28cd72513" = "129r5kyiw10n2021bkdvnr270aiiwyq58h472d151ph0r7wpslgp";
             "https://github.com/input-output-hk/cardano-ledger"."da3e9ae10cf9ef0b805a046c84745f06643583c2" = "1jg1h05gcms119mw7fz798xpj3hr5h426ga934vixmgf88m1jmfx";
           };
+          modules = [({ lib, ...}: {
+            packages.postgresql-libpq.flags.use-pkg-config = true;
+            # work around the sodium-vrf inlining via custom setups. Sigh, this
+            # is bad.
+            packages.encoins-relay-apps.package.buildType = lib.mkForce "Simple";
+            packages.cardano-server.package.buildType = lib.mkForce "Simple";
+            packages.encoins-relay-verifier.package.buildType = lib.mkForce "Simple";
+            packages.encoins-relay-server.package.buildType = lib.mkForce "Simple";
+          })];
+        };
+        cardanoNodePkg = pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc963";
+          src = inputs.cardano-node;
+
+          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          modules = [({
+            packages.double-conversion.ghcOptions = [
+              # stop putting U __gxx_personality_v0 into the library!
+              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+              # stop putting U __cxa_guard_release into the library!
+              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            ];
+            # Just say no to systemd.
+            packages.cardano-config.flags.systemd = false;
+            packages.cardano-node.flags.systemd = false;
+          })
+
+          # Fix compilation with newer ghc versions
+          ({ lib, config, ... }:
+            lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
+            # lib:ghc is a bit annoying in that it comes with it's own build-type:Custom, and then tries
+            # to call out to all kinds of silly tools that GHC doesn't really provide.
+            # For this reason, we try to get away without re-installing lib:ghc for now.
+            reinstallableLibGhc = false;
+          })
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.hydra-node.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+            ];
+          })
+          ];
         };
         # for this simple demo, we'll just use a package from hackage. Namely the
         # trivial `hello` package. See https://hackage.haskell.org/package/hello
@@ -479,9 +572,15 @@
           ogmios-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-ogmios";             } (ogmiosPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.ogmios.components.exes.ogmios;
         };
 
+        # --ghc-option='-fplugin-library=${plutus-tx-plugin}/libplutus-tx-plugin.a;plutus-tx-plugin;PlutusTx.Plugin;[]'
         hydraPackages.packages = {
           hydra-native       = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-hydra-node";                                                  } (hydraPkgs pkgs                                     ).hsPkgs.hydra-node.components.exes.hydra-node;
-          plutus-tx-plugin   = (hydraPkgs pkgs).hsPkgs.plutus-tx-plugin.components.library;
+          plutus-tx-plugin   = (hydraPkgs pkgs).hsPkgs.plutus-tx-plugin.components.library.override {
+            ghcOptions = [ "-staticlib" "-fno-link-rts" "-this-unit-id" "plutus-tx-plugin"];
+            postInstall = ''
+              cp liba.a $out/libplutus-tx-plugin.a
+            '';
+            };
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           hydra-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-hydra-node-static";                     } (hydraPkgs pkgs.pkgsCross.musl64                    ).hsPkgs.hydra-node.components.exes.hydra-node;
           hydra-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-hydra-node-static"; } (hydraPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.hydra-node.components.exes.hydra-node;
@@ -504,15 +603,30 @@
           encoins-relay-server-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-encoins-relay-server";             } (encoinsPkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
         };
 
+        cardanoNodePackages.packages = {
+          cardano-node = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-node"; } (cardanoNodePkg pkgs).hsPkgs.cardano-node.components.exes.cardano-node;
+          cardano-cli  = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-cli";  } (cardanoNodePkg pkgs).hsPkgs.cardano-cli.components.exes.cardano-cli;
+          cardano-submit-api = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-submit-api";  } (cardanoNodePkg pkgs).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
+        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          cardano-node-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-node-static";                     } (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-node.components.exes.cardano-node;
+          cardano-node-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-node-static"; } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-node.components.exes.cardano-node;
+          cardano-node-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-node";             } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-node.components.exes.cardano-node;
+          cardano-cli-static-musl        = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-cli-static";                      } (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-cli.components.exes.cardano-cli;
+          cardano-cli-static-musl-arm64  = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-cli-static";  } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-cli.components.exes.cardano-cli;
+          cardano-cli-dynamic-arm64      = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-cli";              } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-cli.components.exes.cardano-cli;
+          cardano-submit-api-static-musl = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-submit-api-static";               } (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
+          cardano-submit-api-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-submit-api-static";  } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
+          cardano-submit-api-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-submit-api";              } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
+        };
+
         # helper function to add `hydraJobs` to the flake output.
         addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
       # turn them into a merged flake output.
-      in addHydraJobs (pkgs.lib.recursiveUpdate
-                       (pkgs.lib.recursiveUpdate
-                        (pkgs.lib.recursiveUpdate
-                         (pkgs.lib.recursiveUpdate
-                          (pkgs.lib.recursiveUpdate
-                           (pkgs.lib.recursiveUpdate nativePackages linuxCrossPackages) kupoPackages) ogmiosPackages) hydraPackages) dbSyncPackages) encoinsPackages)
+      in addHydraJobs (
+        pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
+          nativePackages
+          [linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages]
+      )
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; }); lib.recursiveUpdate flake { hydraJobs.index = hydra-utils.mkIndex flake; };
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
