@@ -15,7 +15,7 @@
     kupo.url = "github:CardanoSolutions/kupo";
     kupo.flake = false;
 
-    ogmios.url = "github:CardanoSolutions/ogmios";
+    ogmios.url = "github:CardanoSolutions/ogmios?rev=199daf67062e7c9efa735a0ba7d80d49108a56a0";
     ogmios.flake = false;
 
     hydra.url = "github:input-output-hk/hydra";
@@ -576,7 +576,7 @@
         hydraPackages.packages = {
           hydra-native       = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-hydra-node";                                                  } (hydraPkgs pkgs                                     ).hsPkgs.hydra-node.components.exes.hydra-node;
           plutus-tx-plugin   = (hydraPkgs pkgs).hsPkgs.plutus-tx-plugin.components.library.override {
-            ghcOptions = [ "-staticlib" "-fno-link-rts" "-this-unit-id" "plutus-tx-plugin"];
+            ghcOptions = [ "-staticlib" "-fno-link-rts" "-this-unit-id" "plutus-tx-plugin" "-shared"];
             postInstall = ''
               cp liba.a $out/libplutus-tx-plugin.a
             '';
@@ -627,7 +627,7 @@
           nativePackages
           [linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages]
       )
-    ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; }); lib.recursiveUpdate flake { hydraJobs.index = hydra-utils.mkIndex flake; };
+    ); in with (import "${nixpkgs}" { system = "x86_64-linux"; overlays = [(import ./download.nix)]; }); lib.recursiveUpdate flake { hydraJobs.index = hydra-utils.mkIndex flake; };
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
     # use zw3rk and iog cache. zw3rk has the haskell.nix artifacts cached.
