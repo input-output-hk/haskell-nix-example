@@ -3,11 +3,11 @@
     "CHaP": {
       "flake": false,
       "locked": {
-        "lastModified": 1701964264,
-        "narHash": "sha256-sOs8bLbMvtIBQLywB3AM6wcpHr5JUmHJyDhtBmRkHBI=",
+        "lastModified": 1702290471,
+        "narHash": "sha256-uivAP05RENSzQDbDjAU3Fbq+AiDDpcNaHAzvOZM1fik=",
         "owner": "input-output-hk",
         "repo": "cardano-haskell-packages",
-        "rev": "b3ccccc588891d765bd68cd2fc1110844a3bef35",
+        "rev": "1ff7483a6d2670c8627de92779a2b92a989293cd",
         "type": "github"
       },
       "original": {
@@ -137,11 +137,11 @@
     "db-sync": {
       "flake": false,
       "locked": {
-        "lastModified": 1701945903,
-        "narHash": "sha256-SiNcr+4C/T7PDmJ8ThYBlIuyZYPL1ndodH2E0vGcFog=",
+        "lastModified": 1702129847,
+        "narHash": "sha256-S17i7QvRQ3YU2D1wvu9dkUZxW4EUPpmSa5Q17r24qGo=",
         "owner": "input-output-hk",
         "repo": "cardano-db-sync",
-        "rev": "f212ca57989450f242753d805dc47415fbcef758",
+        "rev": "2ef303c808a4a3bdf86ccba3911fd544027a5e86",
         "type": "github"
       },
       "original": {
@@ -451,11 +451,11 @@
     "hydra_2": {
       "flake": false,
       "locked": {
-        "lastModified": 1701709827,
-        "narHash": "sha256-G+aS+5YnpHjol3CI6yPj6nQ+eO5kPRwpJoqPH2aZmFo=",
+        "lastModified": 1702070872,
+        "narHash": "sha256-Y3cCtgg0GDOgGGWEFvzlLmWLzp0Vr4e7ZF7ewz/7ZXk=",
         "owner": "input-output-hk",
         "repo": "hydra",
-        "rev": "b2dc5a0da4988631bd2c1e94b66ba6217d5db595",
+        "rev": "6e7b43ae0f29e9abf104745926253dd1729f4cdc",
         "type": "github"
       },
       "original": {
@@ -472,11 +472,11 @@
         "sodium": "sodium"
       },
       "locked": {
-        "lastModified": 1701223254,
-        "narHash": "sha256-k02Q+vuYHETqDMfnC4ORpHNKWUDpVWTeiETCmf7+gBA=",
+        "lastModified": 1702057058,
+        "narHash": "sha256-+0RP5JWOt56+rFgh5k1fggmDfm3i0L1LfUOf/mhrUz8=",
         "owner": "input-output-hk",
         "repo": "iohk-nix",
-        "rev": "ac6932d5f18c6f249a392fe4edbc2ca15257a512",
+        "rev": "fbae4705ec10ed056146956f9ca94fac3a169c69",
         "type": "github"
       },
       "original": {
@@ -505,11 +505,11 @@
     "kupo": {
       "flake": false,
       "locked": {
-        "lastModified": 1701951513,
-        "narHash": "sha256-HXS1+xAKUTY6SDW6A4rNvOqeKMONpGfkMzpoC84sZME=",
+        "lastModified": 1702200020,
+        "narHash": "sha256-MeZ+D1wpU9STmgU9yv4jb64NyKQDCMakZApQFuXYad4=",
         "owner": "CardanoSolutions",
         "repo": "kupo",
-        "rev": "aa0dc896f1eb3d1ba4bbc9a7f2d0a8435ff9e35b",
+        "rev": "3f316ac14cad99b2b0c0219295c891d2eb4213c8",
         "type": "github"
       },
       "original": {
