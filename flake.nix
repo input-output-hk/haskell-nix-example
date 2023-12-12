@@ -440,7 +440,11 @@
             packages.cardano-server.package.buildType = lib.mkForce "Simple";
             packages.encoins-relay-verifier.package.buildType = lib.mkForce "Simple";
             packages.encoins-relay-server.package.buildType = lib.mkForce "Simple";
-          })];
+          })
+          {
+            reinstallableLibGhc = false;
+          }
+          ];
         };
         cardanoNodePkg = pkgs: pkgs.haskell-nix.project' {
           compiler-nix-name = "ghc963";
