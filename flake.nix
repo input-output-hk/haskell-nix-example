@@ -582,7 +582,7 @@
         hydraPackages.packages = {
           hydra-native       = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-hydra-node";                                                  } (hydraPkgs pkgs                                     ).hsPkgs.hydra-node.components.exes.hydra-node;
           plutus-tx-plugin   = (hydraPkgs pkgs).hsPkgs.plutus-tx-plugin.components.library.override {
-            ghcOptions = [ "-staticlib" "-fno-link-rts" "-this-unit-id" "plutus-tx-plugin" "-shared"];
+            ghcOptions = [ "-staticlib" "-fno-link-rts" "-this-unit-id" "plutus-tx-plugin" ]; # "-shared"];
             postInstall = ''
               cp liba.a $out/libplutus-tx-plugin.a
             '';
