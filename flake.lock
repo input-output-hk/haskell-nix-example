@@ -153,16 +153,15 @@
     "encoins": {
       "flake": false,
       "locked": {
-        "lastModified": 1702125822,
+        "lastModified": 1702230652,
         "narHash": "sha256-QJXja042Ws5rYekAi25Qqt3Ye6zC8fzeRA06l/W+oaQ=",
-        "owner": "angerman",
+        "owner": "encryptedcoins",
         "repo": "encoins-relay",
-        "rev": "255a46835d94c331b6e39cd25c5050e7dde6687b",
+        "rev": "145f37734dfc879171feaade281b030bf25fbb9a",
         "type": "github"
       },
       "original": {
-        "owner": "angerman",
-        "ref": "buildfixes",
+        "owner": "encryptedcoins",
         "repo": "encoins-relay",
         "type": "github"
       }
@@ -505,15 +504,16 @@
     "kupo": {
       "flake": false,
       "locked": {
-        "lastModified": 1702200020,
-        "narHash": "sha256-MeZ+D1wpU9STmgU9yv4jb64NyKQDCMakZApQFuXYad4=",
+        "lastModified": 1702126622,
+        "narHash": "sha256-Kem+2lr9XwFQys9YMaecJWi5NqS4EYJTTnoJl94APkA=",
         "owner": "CardanoSolutions",
         "repo": "kupo",
-        "rev": "3f316ac14cad99b2b0c0219295c891d2eb4213c8",
+        "rev": "9bcc3d6699e5c0270c8ae44c67044c89e565737c",
         "type": "github"
       },
       "original": {
         "owner": "CardanoSolutions",
+        "ref": "v2.7",
         "repo": "kupo",
         "type": "github"
       }
