@@ -392,6 +392,7 @@
               # which in turn are stripped by nix away :-/
               #
               # TODO: Maybe we should just copy them over from ${src}/schema into schema in the postUnpack phase?
+              #       Alternative: maybe I can _materialize_ the src? (e.g. resolve any relative symlinks by duplicating them)
               packages.cardano-db-sync.package.extraSrcFiles =
                 [ "../schema/*.sql" ];
               packages.cardano-db.package.extraSrcFiles =
