@@ -440,6 +440,11 @@
             packages.cardano-server.package.buildType = lib.mkForce "Simple";
             packages.encoins-relay-verifier.package.buildType = lib.mkForce "Simple";
             packages.encoins-relay-server.package.buildType = lib.mkForce "Simple";
+
+          })
+          (pkgs.lib.mkIf (!pkgs.hostPlatform.isx86_64) {
+            # scrypt only available on x86_64, due to use of SSE2.
+            packages.cardano-wallet-core.flags.scrypt = false;
           })
           {
             reinstallableLibGhc = false;
