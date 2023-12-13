@@ -3,7 +3,7 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    haskellNix.url = "github:input-output-hk/haskell.nix?ref=armv7a"; #angerman/fix-aarch64-musl";
+    haskellNix.url = "github:input-output-hk/haskell.nix?ref=angerman/fix-aarch64-musl";
     iserv-proxy = {
       url = "github:stable-haskell/iserv-proxy?ref=iserv-syms";
       flake = false;
