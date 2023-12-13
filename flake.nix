@@ -405,6 +405,9 @@
                 # stop putting U __cxa_guard_release into the library!
                 "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
               ];
+              # Just say no to systemd.
+              packages.cardano-config.flags.systemd = false;
+              packages.cardano-node.flags.systemd = false;
             })
             # Fix compilation with newer ghc versions
             ({ lib, config, ... }:
