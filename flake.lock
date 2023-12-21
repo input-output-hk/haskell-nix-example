@@ -555,6 +555,24 @@
         "type": "github"
       }
     },
+    "nix-tools": {
+      "flake": false,
+      "locked": {
+        "dir": "nix-tools",
+        "lastModified": 1703124280,
+        "narHash": "sha256-E6FltV3NPkGHLQg353PRjEvKdgcPfYJ9pKMy+uyI0Bs=",
+        "owner": "input-output-hk",
+        "repo": "haskell.nix",
+        "rev": "39a7e13950b90a37be21340180f251147c19a8fe",
+        "type": "github"
+      },
+      "original": {
+        "dir": "nix-tools",
+        "owner": "input-output-hk",
+        "repo": "haskell.nix",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1657693803,
@@ -777,6 +795,7 @@
         "iohkNix": "iohkNix",
         "iserv-proxy": "iserv-proxy",
         "kupo": "kupo",
+        "nix-tools": "nix-tools",
         "nixpkgs": [
           "haskellNix",
           "nixpkgs-unstable"

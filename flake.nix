@@ -30,6 +30,9 @@
     cardano-node.url = "github:input-output-hk/cardano-node?ref=8.7.2";
     cardano-node.flake = false;
 
+    nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
+    nix-tools.flake = false;
+
     # kupo needs the crypto overlays from iohk-nix
     iohkNix.url = "github:input-output-hk/iohk-nix";
     # kupo also needs cardano-haskell-packages
@@ -419,6 +422,30 @@
             })
           ];
         };
+        nixToolsPkg = pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc963";
+          src = inputs.nix-tools;
+
+          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          modules = [
+          #   ({
+          #   packages.double-conversion.ghcOptions = [
+          #     # stop putting U __gxx_personality_v0 into the library!
+          #     "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+          #     # stop putting U __cxa_guard_release into the library!
+          #     "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+          #   ];
+          # })
+          # Fix compilation with newer ghc versions
+          ({ lib, config, ... }:
+            lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
+            # lib:ghc is a bit annoying in that it comes with it's own build-type:Custom, and then tries
+            # to call out to all kinds of silly tools that GHC doesn't really provide.
+            # For this reason, we try to get away without re-installing lib:ghc for now.
+            reinstallableLibGhc = false;
+          })
+          ];
+        };
 
         encoinsPkg = pkgs: pkgs.haskell-nix.project' {
           cabalProjectLocal = ''
@@ -645,6 +672,12 @@
           cardano-submit-api-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-submit-api-static";  } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
           cardano-submit-api-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-submit-api";              } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
         };
+        nixToolsPackages.packages = pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg) {} (map (exe: {
+          "${exe}" = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-${exe}"; } (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe};
+        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          "${exe}-static-musl"       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-${exe}-static";                     } (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.nix-tools.components.exes.${exe};
+          "${exe}-static-musl-arm64" = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-${exe}-static"; } (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.nix-tools.components.exes.${exe};
+        }) ["cabal-name" "cabal-to-nix" "hackage-to-nix" "hashes-to-nix" "lts-to-nix" "make-install-plan" "plan-to-nix" "stack-repos" "stack-to-nix" "truncate-index" ]);
 
         # helper function to add `hydraJobs` to the flake output.
         addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
@@ -652,7 +685,7 @@
       in addHydraJobs (
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
-          [linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages]
+          [linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages nixToolsPackages ]
       )
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; }); lib.recursiveUpdate flake { hydraJobs.index = hydra-utils.mkIndex flake; };
   # --- Flake Local Nix Configuration ----------------------------
