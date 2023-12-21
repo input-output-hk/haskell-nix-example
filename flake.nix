@@ -740,8 +740,8 @@ index 3aeb0e5..bea0ac9 100644
           # cardano-submit-api-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-submit-api-static";  } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
           # cardano-submit-api-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-submit-api";              } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
         };
-        nixToolsPackages.packages = let components = ["cabal-name" "cabal-to-nix" "hackage-to-nix" "hashes-to-nix" "lts-to-nix" "make-install-plan" "plan-to-nix" "stack-repos" "stack-to-nix" "truncate-index" ];
-        in
+        nixToolsPackages.packages =
+        let components = ["cabal-name" "cabal-to-nix" "hackage-to-nix" "hashes-to-nix" "lts-to-nix" "make-install-plan" "plan-to-nix" "stack-repos" "stack-to-nix" "truncate-index" ]; in
         # This is commented out, we don't want each and every executable by itself. They should all be rolled up into
         # one nix-tools package per platform.
 
@@ -769,6 +769,16 @@ index 3aeb0e5..bea0ac9 100644
                                      ([ cabal-install.components.exes.cabal hpack.components.exes.hpack ]
                                      ++ map (exe: nix-tools.components.exes.${exe}) components);
         };
+        # ; in nix-tools-pkgs // { default-nix = (import nixpkgs { system = "x86_64-linux" }).runCommand "default.nix" { buildInputs = [] } (''
+        #     mkdir -p $out/nix-support
+        #     echo "pkgs: baseurl: {" > $out/default.nix
+        #     echo "  x86_64-linux = pkgs.fetchzip { name = \"nix-tools\"; url = \"''${baseurl}/nix-tools-static.zip\"; sha256 = $(sha256sum ${nix-tools-static})" >> $out/default.nix
+        #     echo "}" > $out/default.nix
+        #     cp ${self.writeText "default.nix" ''pkgs: baseurl: {
+        #       x86_64-linux = pkgs.fetchzip { name = "nix-tools"; url = "${baseurl}/nix-tools-static.zip"; sha256 =
+        #     }''} $out/default.nix
+        #     echo "report build-products $out default.nix" > $out/nix-support/hydra-build-products
+        # '')};
 
         # helper function to add `hydraJobs` to the flake output.
         addHydraJobs = pkgs: pkgs // { hydraJobs = pkgs.packages; };
