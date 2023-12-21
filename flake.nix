@@ -439,6 +439,31 @@
           #     "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
           #   ];
           # })
+
+          # just say no to this gitXXX shit
+          { packages.hnix.patches = [
+            (builtins.toFile "plutus-core.patch" ''
+diff --git a/src/Nix/Options/Parser.hs b/src/Nix/Options/Parser.hs
+index 3aeb0e5..bea0ac9 100644
+--- a/src/Nix/Options/Parser.hs
++++ b/src/Nix/Options/Parser.hs
+@@ -214,11 +214,7 @@ versionOpt = shortVersionOpt <*> debugVersionOpt
+   debugVersionOpt =
+     infoOption
+       ( fold
+-          [ "Version: ", showVersion version
+-          , "\nCommit: ", $(gitHash)
+-          , "\n  date: ", $(gitCommitDate)
+-          , "\n  branch: ", $(gitBranch)
+-          ]
++          [ "Version: ", showVersion version ]
+       )
+       (  long "long-version"
+       <> help "Show long debug version form"
+
+'')
+          ];
+          }
           # Fix compilation with newer ghc versions
           ({ lib, config, ... }:
             lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
@@ -446,6 +471,15 @@
             # to call out to all kinds of silly tools that GHC doesn't really provide.
             # For this reason, we try to get away without re-installing lib:ghc for now.
             reinstallableLibGhc = false;
+          })
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.hydra-node.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+            ];
           })
           ];
         };
