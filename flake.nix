@@ -423,10 +423,10 @@
           ];
         };
         nixToolsPkg = pkgs: pkgs.haskell-nix.project' {
-          cabalProjectLocal = ''
-          allow-newer: *:base, *:ghc-prim, *:template-haskell
-          '';
-          compiler-nix-name = "ghc963";
+          # cabalProjectLocal = ''
+          # allow-newer: *:base, *:ghc-prim, *:template-haskell
+          # '';
+          compiler-nix-name = "ghc928";
           src = "${inputs.nix-tools}/nix-tools";
 
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
