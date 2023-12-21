@@ -556,7 +556,21 @@ index 3aeb0e5..bea0ac9 100644
             reinstallableLibGhc = false;
           })
           (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
-            packages.hydra-node.ghcOptions = with pkgs; [
+            packages.cardano-node.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+            ];
+            packages.cardano-cli.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+            ];
+            packages.cardano-submit-api.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
                 "-L${lib.getLib static-libsodium-vrf}/lib"
                 "-L${lib.getLib static-secp256k1}/lib"
