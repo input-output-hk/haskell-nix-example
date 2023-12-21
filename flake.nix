@@ -710,13 +710,19 @@ index 3aeb0e5..bea0ac9 100644
           cardano-submit-api-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-submit-api";              } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
         };
         nixToolsPackages.packages = let components = ["cabal-name" "cabal-to-nix" "hackage-to-nix" "hashes-to-nix" "lts-to-nix" "make-install-plan" "plan-to-nix" "stack-repos" "stack-to-nix" "truncate-index" ];
-        in pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg) {} (map (exe: {
-          "${exe}" = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-${exe}"; } (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe};
-        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          "${exe}-static-musl"       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-${exe}-static";                     } (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.nix-tools.components.exes.${exe};
-          "${exe}-static-musl-arm64" = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-${exe}-static"; } (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.nix-tools.components.exes.${exe};
-        }) components)
-        // {
+        in
+        # This is commented out, we don't want each and every executable by itself. They should all be rolled up into
+        # one nix-tools package per platform.
+
+
+        # pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg) {} (map (exe: {
+        #   "${exe}" = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-${exe}"; } (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe};
+        # } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+        #   "${exe}-static-musl"       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-${exe}-static";                     } (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.nix-tools.components.exes.${exe};
+        #   "${exe}-static-musl-arm64" = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-${exe}-static"; } (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.nix-tools.components.exes.${exe};
+        # }) components)
+        # //
+        {
           "nix-tools" = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-nix-tools"; } (map (exe: (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe}) components);
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           "nix-tools-static-musl"       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-nix-tools-static";                     } (map (exe: (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.nix-tools.components.exes.${exe}) components);
