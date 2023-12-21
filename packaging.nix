@@ -58,6 +58,21 @@ super: self: {
                 done
             '';
 
+            checkPhase = pkgs.lib.optionalString (targetPlatform.isLinux && targetPlatform.isGnu) ''
+                for bin in ${name'}/*; do
+                if ldd $bin |grep nix\/store; then
+                    echo "ERROR: $bin still depends on nix store"
+                    exit 1
+                fi
+                done
+            '' + pkgs.lib.optionalString (targetPlatform.isDarwin) ''
+                for bin in ${name'}/*; do
+                if otool -L $bin |grep nix\/store; then
+                    echo "ERROR: $bin still depends on nix store"
+                    exit 1
+                fi
+                done
+            '';
             # compress and put into hydra products
             installPhase = ''
                 mkdir -p $out/
