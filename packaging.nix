@@ -36,10 +36,10 @@ super: self: {
 
             buildPhase = ''
                 mkdir -p ${name'}
+                for comp in ${builtins.concatStringsSep " " (map (drv: drv.out) drvs)}; do
+                    cp $comp/bin/* ${name'}/
+                done
             ''
-            + (map (drv: ''
-                cp ${drv.out}/bin/* ${name'}/
-            '') drvs)
             # set the interpreter to the default expected location on linux. (See interpForSystem above)
             + pkgs.lib.optionalString (targetPlatform.isLinux && targetPlatform.isGnu) ''
                 for bin in ${name'}/*; do
