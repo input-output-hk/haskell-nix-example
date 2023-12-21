@@ -472,6 +472,20 @@ index 3aeb0e5..bea0ac9 100644
             # For this reason, we try to get away without re-installing lib:ghc for now.
             reinstallableLibGhc = false;
           })
+          ({
+            # This is stupid. We should be able to set dontStrip globally.  The
+            # fact that we can't inherit is bullshit.
+            packages.nix-tools.components.exes = {
+              cabal-name.dontStrip = false;
+              cabal-to-nix.dontStrip = false;
+              hackage-to-nix.dontStrip = false;
+              hashes-to-nix.dontStrip = false;
+              lts-to-nix.dontStrip = false;
+              make-install-plan.dontStrip = false;
+              plan-to-nix.dontStrip = false;
+              stack-repos.dontStrip = false;
+            };
+          })
           (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
             packages.nix-tools.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
