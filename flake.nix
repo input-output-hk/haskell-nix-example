@@ -473,7 +473,7 @@ index 3aeb0e5..bea0ac9 100644
             reinstallableLibGhc = false;
           })
           (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
-            packages.hydra-node.ghcOptions = with pkgs; [
+            packages.nix-tools.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
                 "-L${lib.getLib static-libsodium-vrf}/lib"
                 "-L${lib.getLib static-secp256k1}/lib"
