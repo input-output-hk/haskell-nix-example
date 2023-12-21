@@ -757,7 +757,7 @@ index 3aeb0e5..bea0ac9 100644
           "nix-tools-static"       = with (nixToolsPkg pkgs).hsPkgs;
                                      pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-nix-tools-static";                                      }
                                      ([ cabal-install.components.exes.cabal hpack.components.exes.hpack ]
-                                     ++ map (exe: nix-tools.components.exes.${exe}.overrideDerivation (_: {stripDebugFlags = []; })) components);
+                                     ++ map (exe: nix-tools.components.exes.${exe}.overrideDerivation (_: { stripDebugFlags = []; })) components);
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           "nix-tools-static"       = with (nixToolsPkg pkgs.pkgsCross.musl64).hsPkgs;
                                      pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-nix-tools-static";                     }
