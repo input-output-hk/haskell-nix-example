@@ -754,10 +754,19 @@ index 3aeb0e5..bea0ac9 100644
         # }) components)
         # //
         pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
-          "nix-tools-static" = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-nix-tools"; } (map (exe: (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe}.overrideDerivation (_: {stripDebugFlags = []; })) components);
+          "nix-tools-static" = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-nix-tools"; }
+                               ((map (exe: (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe}.overrideDerivation (_: {stripDebugFlags = []; })) components)
+                                ++ [       (nixToolsPkg pkgs).hsPkgs.cabal-install.components.exes.cabal
+                                           (nixToolsPkg pkgs).hsPkgs.hpack.components.exes.hpack ]);
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          "nix-tools-static"       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-nix-tools-static";                     } (map (exe: (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.nix-tools.components.exes.${exe}) components);
-          "nix-tools-static-arm64" = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-nix-tools-static"; } (map (exe: (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.nix-tools.components.exes.${exe}) components);
+          "nix-tools-static"       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-nix-tools-static";                     }
+                                     ((map (exe: (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.nix-tools.components.exes.${exe}) components)
+                                      ++ [       (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.cabal-install.components.exes.cabal
+                                                 (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.hpack.components.exes.hpack ]);
+          "nix-tools-static-arm64" = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-nix-tools-static"; }
+                                     ((map (exe: (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.nix-tools.components.exes.${exe}) components)
+                                      ++ [       (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cabal-install.components.exes.cabal
+                                                 (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.hpack.components.exes.hpack ]);
         };
 
         # helper function to add `hydraJobs` to the flake output.
