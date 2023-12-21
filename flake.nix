@@ -754,7 +754,7 @@ index 3aeb0e5..bea0ac9 100644
         # }) components)
         # //
         {
-          "nix-tools" = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-nix-tools"; } (map (exe: (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe}) components);
+          "nix-tools" = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-nix-tools"; } (map (exe: (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe}.overrideDerivation (_: {stripDebugFlags = [" "]; })) components);
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           "nix-tools-static-musl"       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-nix-tools-static";                     } (map (exe: (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.nix-tools.components.exes.${exe}) components);
           "nix-tools-static-musl-arm64" = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-nix-tools-static"; } (map (exe: (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.nix-tools.components.exes.${exe}) components);
