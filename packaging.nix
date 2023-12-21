@@ -31,7 +31,7 @@ super: self: {
             name = "${name'}.zip";
             buildInputs = with nativePackages; [ patchelf zip fixup-nix-deps ];
 
-            phases = [ "buildPhase" "installPhase" ];
+            phases = [ "buildPhase" "checkPhase" "installPhase" ];
 
             buildPhase = ''
                 mkdir -p ${name'}
