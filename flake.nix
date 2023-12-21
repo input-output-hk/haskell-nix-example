@@ -709,13 +709,13 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         cardanoNodePackages.packages = {
-          cardano-tools = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-tools"; } (map (exe: (cardanoNodePkg pkgs).hsPkgs.${exe}.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"]);
+          cardano-tools = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-tools"; } (map (exe: (cardanoNodePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"]);
           # cardano-node = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-node"; } (cardanoNodePkg pkgs).hsPkgs.cardano-node.components.exes.cardano-node;
           # cardano-cli  = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-cli";  } (cardanoNodePkg pkgs).hsPkgs.cardano-cli.components.exes.cardano-cli;
           # cardano-submit-api = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-submit-api";  } (cardanoNodePkg pkgs).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          cardano-tools-static-musl      = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-tools-static";                     } (map (exe: (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.${exe}.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"]);
-          cardano-tools-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-tools-static"; } (map (exe: (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.${exe}.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"]);
+          cardano-tools-static-musl      = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-tools-static";                     } (map (exe: (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"]);
+          cardano-tools-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-tools-static"; } (map (exe: (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"]);
           # cardano-node-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-node-static";                     } (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-node.components.exes.cardano-node;
           # cardano-node-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-node-static"; } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-node.components.exes.cardano-node;
           # cardano-node-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-node";             } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-node.components.exes.cardano-node;
