@@ -1,7 +1,8 @@
 super: self: {
     packaging = {
-        asZip = { name ? null }: drvs:
+        asZip = { name ? null }: drvs':
         let pkgs = self;
+            drvs = if builtins.isList drvs' then drvs' else [ drvs' ];
             drv = if builtins.isList drvs then builtins.head drvs else drvs;
             name' = if name == null then drv.pname or drv.name else name;
             targetPlatform = drv.stdenv.targetPlatform;
@@ -35,8 +36,10 @@ super: self: {
 
             buildPhase = ''
                 mkdir -p ${name'}
-                cp ${drv.out}/bin/* ${name'}/
             ''
+            + (map (drv: ''
+                cp ${drv.out}/bin/* ${name'}/
+            '') drvs)
             # set the interpreter to the default expected location on linux. (See interpForSystem above)
             + pkgs.lib.optionalString (targetPlatform.isLinux && targetPlatform.isGnu) ''
                 for bin in ${name'}/*; do
@@ -76,16 +79,16 @@ super: self: {
             # compress and put into hydra products
             installPhase = ''
                 mkdir -p $out/
-                zip -r -9 $out/${drv.name}.zip ${name'}
+                zip -r -9 $out/${name'}.zip ${name'}
 
                 mkdir -p $out/nix-support
                 echo "file binary-dist \"$(echo $out/*.zip)\"" \
                 > $out/nix-support/hydra-build-products
             '';
             passthru = {
-                inherit drv;
+                inherit drv drvs;
                 isPackage = true;
-                packageName = "${drv.name}.zip";
+                packageName = "${name'}.zip";
             };
         };
     };
