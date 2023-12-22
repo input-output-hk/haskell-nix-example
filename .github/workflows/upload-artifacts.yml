@@ -7,6 +7,7 @@ on:
   pull_request:
 
 env:
+  FLAKE_REF: github:${{ github.repository }}/${{ github.ref_name }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -14,25 +15,63 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Install Nix with good defaults
+        uses: input-output-hk/install-nix-action@v20
+        with:
+          extra_nix_config: |
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
+            substituters = https://cache.nixos.org/ https://cache.iog.io/ https://cache.zw3rk.com
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Display flake metadata
+        id: flake-metadata
+        run: |
+          nix flake metadata ${{ env.FLAKE_REF }}
+          nix flake metadata ${{ env.FLAKE_REF }} --json | jq -r '"LOCKED_URL=\(.url)"' >> "$GITHUB_OUTPUT"
 
       - name: "[aarch64-darwin] Wait for nix-tools"
         uses: input-output-hk/actions/wait-for-hydra@latest
         with:
           status: 'ci/hydra-build:aarch64-darwin.nix-tools-static'
 
+      - name: "[aarch64-darwin] Pull nix-tools"
+        run: |
+          nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.aarch64-darwin.nix-tools-static
+          cp result/*-nix-tools-static.zip .
+
       - name: "[x86_64-darwin] Wait for nix-tools"
         uses: input-output-hk/actions/wait-for-hydra@latest
         with:
           status: 'ci/hydra-build:x86_64-darwin.nix-tools-static'
+
+      - name: "[x86_64-darwin] Pull nix-tools"
+        run: |
+          nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-darwin.nix-tools-static
+          cp result/*-nix-tools-static.zip .
 
       - name: "[x86_64-linux] Wait for nix-tools"
         uses: input-output-hk/actions/wait-for-hydra@latest
         with:
           status: 'ci/hydra-build:x86_64-linux.nix-tools-static'
 
+      - name: "[x86_64-linux] Pull nix-tools"
+        run: |
+          nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-linux.nix-tools-static
+          cp result/*-nix-tools-static.zip .
+
       - name: "[aarch64-linux] Wait for nix-tools"
         uses: input-output-hk/actions/wait-for-hydra@latest
         with:
           status: 'ci/hydra-build:x86_64-linux.nix-tools-static-arm64'
+
+      - name: "[aarch64-linux] Pull nix-tools"
+        run: |
+          nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-linux.nix-tools-static-arm64
+          cp result/*-nix-tools-static.zip .
+
+      - name: Release
+        uses: input-output-hk/action-gh-release@v1
+        with:
+          draft: true
+          files: |
+            *-nix-tools-static.zip
