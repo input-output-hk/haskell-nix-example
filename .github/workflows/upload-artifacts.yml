@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+env:
+  GH_TOKEN: ${{ github.token }}
+
 jobs:
   wait-for-hydra:
     runs-on: ubuntu-latest
