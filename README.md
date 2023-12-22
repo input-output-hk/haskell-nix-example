@@ -17,7 +17,7 @@ The `flake.nix` has been kept intentionally simple, with as little abstraction
 as possible.  While this leads to a more verbose `flake.nix`, our hope is that
 it makes it much easer to read and follow along.
 
-## Build Targets
+## Build Targets 
 
 Running `nix flake show --all-systems --option allow-import-from-derivation true`
 will yield:
