@@ -1,0 +1,35 @@
+name: Wait for Hydra Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  wait-for-hydra:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: "[aarch64-darwin] Wait for nix-tools"
+        uses: input-output-hk/actions/wait-for-hydra@latest
+        with:
+          status: 'ci/hydra-build:aarch64-darwin.nix-tools-static'
+
+      - name: "[x86_64-darwin] Wait for nix-tools"
+        uses: input-output-hk/actions/wait-for-hydra@latest
+        with:
+          status: 'ci/hydra-build:x86_64-darwin.nix-tools-static'
+
+      - name: "[x86_64-linux] Wait for nix-tools"
+        uses: input-output-hk/actions/wait-for-hydra@latest
+        with:
+          status: 'ci/hydra-build:x86_64-linux.nix-tools-static'
+
+      - name: "[aarch64-linux] Wait for nix-tools"
+        uses: input-output-hk/actions/wait-for-hydra@latest
+        with:
+          status: 'ci/hydra-build:x86_64-linux.nix-tools-static-arm64'
