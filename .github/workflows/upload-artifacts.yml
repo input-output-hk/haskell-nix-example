@@ -33,7 +33,7 @@ jobs:
           nix flake metadata ${{ env.FLAKE_REF }} --json | jq -r '"LOCKED_URL=\(.url)"' >> "$GITHUB_OUTPUT"
 
       - name: Wait for nix-tools meta job
-        uses: input-output-hk/actions/wait-for-hydra@latest
+        uses: input-output-hk/actions/wait-for-hydra@support-prs
         with:
           status: 'ci/hydra-build:nix-tools '
 
