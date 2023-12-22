@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Install Nix with good defaults
         uses: input-output-hk/install-nix-action@v20
         with:
@@ -69,6 +72,16 @@ jobs:
           nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-linux.nix-tools-static-arm64
           cp result/*-nix-tools-static.zip .
 
+      - name: "Compute default.nix"
+        run: |
+          echo "pkgs: {" > nix-tools.nix
+          for arch in aarch64-darwin x86_64-darwin aarch64-linux x86_64-linux; do
+            echo "  ${arch} = pkgs.fetchzip { name = \"${arch}-nix-tools-static\"; url = \"${arch}-nix-tools-static.zip\"; sha256 = \"$(nix-hash --sri --type sha256 --flat ${arch}-nix-tools-static.zip)\"; };"
+          done
+          echo "}"       > nix-tools.nix
+          cat nix-tools.nix
+
+          git status
       - name: Release
         uses: input-output-hk/action-gh-release@v1
         with:

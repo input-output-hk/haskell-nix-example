@@ -788,7 +788,21 @@ index 3aeb0e5..bea0ac9 100644
           nativePackages
           [linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages nixToolsPackages ]
       )
-    ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; }); lib.recursiveUpdate flake { hydraJobs.index = hydra-utils.mkIndex flake; };
+    ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; });
+          lib.recursiveUpdate flake {
+            hydraJobs.index = hydra-utils.mkIndex flake;
+            hydraJobs.nix-tools = pkgs.releaseTools.aggregate {
+              name = "nix-tools";
+              description = "static nix tools built for all platforms. These are bootstrap tools for haskell.nix.";
+              constituents = with flake.hydraJobs; [
+                aarch64-darwin.nix-tools-static
+                x86_64-darwin.nix-tools-static
+                x86_64-linux.nix-tools-static
+                x86_64-linux.nix-tools-static-arm64
+                (writeText "gitrev" (self.rev or "0000000000000000000000000000000000000000"))
+              ];
+            };
+          };
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
     # use zw3rk and iog cache. zw3rk has the haskell.nix artifacts cached.
