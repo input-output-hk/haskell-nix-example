@@ -793,7 +793,6 @@ index 3aeb0e5..bea0ac9 100644
             hydraJobs.index = hydra-utils.mkIndex flake;
             hydraJobs.nix-tools = pkgs.releaseTools.aggregate {
               name = "nix-tools";
-              description = "static nix tools built for all platforms. These are bootstrap tools for haskell.nix.";
               constituents = with flake.hydraJobs; [
                 aarch64-darwin.nix-tools-static
                 x86_64-darwin.nix-tools-static
