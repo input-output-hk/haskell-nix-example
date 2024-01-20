@@ -801,6 +801,16 @@ index 3aeb0e5..bea0ac9 100644
                 (writeText "gitrev" (self.rev or "0000000000000000000000000000000000000000"))
               ];
             };
+            hydraJobs.all-nix-tools = runCommand "all-nix-tools" {
+                # requiredSystemFeatures = [ "recursive-nix" ];
+                # nativeBuildInputs = [ pkgs.nix ];
+              } (with flake.hydraJobs; ''
+              mkdir $out
+              cp ${aarch64-darwin.nix-tools-static}/*.zip $out/
+              cp ${x86_64-darwin.nix-tools-static}/*.zip $out/
+              cp ${x86_64-linux.nix-tools-static}/*.zip $out/
+              cp ${x86_64-linux.nix-tools-static-arm64}/*.zip $out/
+            '');
           };
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {

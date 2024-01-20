@@ -35,26 +35,11 @@ jobs:
       - name: Wait for nix-tools meta job
         uses: input-output-hk/actions/wait-for-hydra@angerman/support-prs
         with:
-          status: 'ci/hydra-build:nix-tools'
+          status: 'ci/hydra-build:all-nix-tools'
 
-      - name: "[aarch64-darwin] Pull nix-tools"
+      - name: "Pull nix-tools"
         run: |
-          nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.aarch64-darwin.nix-tools-static
-          cp result/*-nix-tools-static.zip .
-
-      - name: "[x86_64-darwin] Pull nix-tools"
-        run: |
-          nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-darwin.nix-tools-static
-          cp result/*-nix-tools-static.zip .
-
-      - name: "[x86_64-linux] Pull nix-tools"
-        run: |
-          nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-linux.nix-tools-static
-          cp result/*-nix-tools-static.zip .
-
-      - name: "[aarch64-linux] Pull nix-tools"
-        run: |
-          nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-linux.nix-tools-static-arm64
+          nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.all-nix-tools
           cp result/*-nix-tools-static.zip .
 
       - name: "Compute default.nix"
