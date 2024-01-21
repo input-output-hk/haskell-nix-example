@@ -802,14 +802,15 @@ index 3aeb0e5..bea0ac9 100644
               ];
             };
             hydraJobs.all-nix-tools = runCommand "all-nix-tools" {
-                # requiredSystemFeatures = [ "recursive-nix" ];
-                # nativeBuildInputs = [ pkgs.nix ];
+                requiredSystemFeatures = [ "recursive-nix" ];
+                nativeBuildInputs = [ pkgs.nix ];
               } (with flake.hydraJobs; ''
+              export HOME=$(mktemp -d)
+              echo "$out"
               mkdir $out
-              cp ${aarch64-darwin.nix-tools-static}/*.zip $out/
-              cp ${x86_64-darwin.nix-tools-static}/*.zip $out/
-              cp ${x86_64-linux.nix-tools-static}/*.zip $out/
-              cp ${x86_64-linux.nix-tools-static-arm64}/*.zip $out/
+              ls -lah $out
+              echo $(nix --extra-experimental-features "flakes nix-command" build --offline --accept-flake-config --no-update-lock-file --no-link --print-out-paths ${./.}#hydraJobs.aarch64-darwin.nix-tools-static)/*.zip $out/
+              cp $(nix --extra-experimental-features "flakes nix-command" build --offline --accept-flake-config --no-update-lock-file --no-link --print-out-paths ${./.}#hydraJobs.aarch64-darwin.nix-tools-static)/*.zip $out/
             '');
           };
   # --- Flake Local Nix Configuration ----------------------------
