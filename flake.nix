@@ -769,6 +769,55 @@ index 3aeb0e5..bea0ac9 100644
                                      ([ cabal-install.components.exes.cabal hpack.components.exes.hpack ]
                                      ++ map (exe: nix-tools.components.exes.${exe}) components);
         };
+        nixToolsPackagesNoIfd.packages =
+        pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+          nix-tools-static-no-ifd = pkgs.runCommand "all-nix-tools" {
+            requiredSystemFeatures = [ "recursive-nix" ];
+            nativeBuildInputs = [ pkgs.nix pkgs.gitMinimal ]
+                              ++ map (x: "${x}") (builtins.attrValues inputs)
+                              ++ map (x: "${x}") (builtins.attrValues inputs.haskellNix.inputs)
+                              ++ map (x: "${x}") (builtins.attrValues inputs.flake-utils.inputs)
+                              ++ map (x: "${x}") (builtins.attrValues inputs.iohkNix.inputs)
+                              ;
+          } ''
+            export HOME=$(mktemp -d)
+            mkdir $out
+            cp  $(nix --offline --extra-experimental-features "flakes nix-command" \
+                  build --accept-flake-config --no-link --print-out-paths \
+                  ${./.}#nix-tools-static)/*.zip $out/
+          '';
+        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          nix-tools-static-no-ifd = pkgs.runCommand "all-nix-tools" {
+            requiredSystemFeatures = [ "recursive-nix" ];
+            nativeBuildInputs = [ pkgs.nix pkgs.gitMinimal ]
+                              ++ map (x: "${x}") (builtins.attrValues inputs)
+                              ++ map (x: "${x}") (builtins.attrValues inputs.haskellNix.inputs)
+                              ++ map (x: "${x}") (builtins.attrValues inputs.flake-utils.inputs)
+                              ++ map (x: "${x}") (builtins.attrValues inputs.iohkNix.inputs)
+                              ;
+          } ''
+            export HOME=$(mktemp -d)
+            mkdir $out
+            cp  $(nix --offline --extra-experimental-features "flakes nix-command" \
+                  build --accept-flake-config --no-link --print-out-paths \
+                  ${./.}#nix-tools-static)/*.zip $out/
+          '';
+          nix-tools-static-arm64-no-ifd = pkgs.runCommand "all-nix-tools" {
+            requiredSystemFeatures = [ "recursive-nix" ];
+            nativeBuildInputs = [ pkgs.nix pkgs.gitMinimal ]
+                              ++ map (x: "${x}") (builtins.attrValues inputs)
+                              ++ map (x: "${x}") (builtins.attrValues inputs.haskellNix.inputs)
+                              ++ map (x: "${x}") (builtins.attrValues inputs.flake-utils.inputs)
+                              ++ map (x: "${x}") (builtins.attrValues inputs.iohkNix.inputs)
+                              ;
+          } ''
+            export HOME=$(mktemp -d)
+            mkdir $out
+            cp  $(nix --offline --extra-experimental-features "flakes nix-command" \
+                  build --accept-flake-config --no-link --print-out-paths \
+                  ${./.}#nix-tools-static-arm64)/*.zip $out/
+          '';
+        };
         # ; in nix-tools-pkgs // { default-nix = (import nixpkgs { system = "x86_64-linux" }).runCommand "default.nix" { buildInputs = [] } (''
         #     mkdir -p $out/nix-support
         #     echo "pkgs: baseurl: {" > $out/default.nix
@@ -786,32 +835,33 @@ index 3aeb0e5..bea0ac9 100644
       in addHydraJobs (
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
-          [linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages nixToolsPackages ]
+          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages nixToolsPackages nixToolsPackagesNoIfd ]
       )
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; });
           lib.recursiveUpdate flake {
             hydraJobs.index = hydra-utils.mkIndex flake;
             hydraJobs.nix-tools = pkgs.releaseTools.aggregate {
               name = "nix-tools";
-              constituents = with flake.hydraJobs; [
-                aarch64-darwin.nix-tools-static
-                x86_64-darwin.nix-tools-static
-                x86_64-linux.nix-tools-static
-                x86_64-linux.nix-tools-static-arm64
+              constituents = [
+                "aarch64-darwin.nix-tools-static"
+                "x86_64-darwin.nix-tools-static"
+                "x86_64-linux.nix-tools-static"
+                "x86_64-linux.nix-tools-static-arm64"
+                "aarch64-darwin.nix-tools-static-no-ifd"
+                "x86_64-darwin.nix-tools-static-no-ifd"
+                "x86_64-linux.nix-tools-static-no-ifd"
+                "x86_64-linux.nix-tools-static-arm64-no-ifd"
                 (writeText "gitrev" (self.rev or "0000000000000000000000000000000000000000"))
               ];
             };
-            hydraJobs.all-nix-tools = runCommand "all-nix-tools" {
-                requiredSystemFeatures = [ "recursive-nix" ];
-                nativeBuildInputs = [ pkgs.nix ];
-              } (with flake.hydraJobs; ''
-              export HOME=$(mktemp -d)
-              echo "$out"
-              mkdir $out
-              ls -lah $out
-              echo $(nix --extra-experimental-features "flakes nix-command" build --offline --accept-flake-config --no-update-lock-file --no-link --print-out-paths ${./.}#hydraJobs.aarch64-darwin.nix-tools-static)/*.zip $out/
-              cp $(nix --extra-experimental-features "flakes nix-command" build --offline --accept-flake-config --no-update-lock-file --no-link --print-out-paths ${./.}#hydraJobs.aarch64-darwin.nix-tools-static)/*.zip $out/
-            '');
+            # hydraJobs.all-nix-tools = runCommand "all-nix-tools" {
+            #   } ''
+            #   mkdir $out
+            #   cp ${flake.hydraJobs.aarch64-darwin.nix-tools-static-no-ifd}/*.zip $out/
+            #   cp ${flake.hydraJobs.x86_64-darwin.nix-tools-static-no-ifd}/*.zip $out/
+            #   cp ${flake.hydraJobs.x86_64-linux.nix-tools-static-no-ifd}/*.zip $out/
+            #   cp ${flake.hydraJobs.x86_64-linux.nix-tools-static-arm64-no-ifd}/*.zip $out/
+            # '';
           };
   # --- Flake Local Nix Configuration ----------------------------
   nixConfig = {
