@@ -771,7 +771,7 @@ index 3aeb0e5..bea0ac9 100644
         };
         nixToolsPackagesNoIfd.packages =
         pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
-          "nix-tools-static-no-ifd" = pkgs.runCommand "all-nix-tools" {
+          "nix-tools-static-no-ifd" = pkgs.runCommand "${pkgs.hostPlatform.system}-all-nix-tools" {
             requiredSystemFeatures = [ "recursive-nix" ];
             nativeBuildInputs = [ pkgs.nix pkgs.gitMinimal ]
                               ++ map (x: "${x}") (builtins.attrValues inputs)
@@ -784,10 +784,11 @@ index 3aeb0e5..bea0ac9 100644
             mkdir $out
             cp  $(nix --offline --extra-experimental-features "flakes nix-command" \
                   build --accept-flake-config --no-link --print-out-paths \
+                  --system ${pkgs.hostPlatform.system} \
                   ${./.}#nix-tools-static)/*.zip $out/
           '';
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          "nix-tools-static-no-ifd" = pkgs.runCommand "all-nix-tools" {
+          "nix-tools-static-no-ifd" = pkgs.runCommand "x86_64-linux-all-nix-tools" {
             requiredSystemFeatures = [ "recursive-nix" ];
             nativeBuildInputs = [ pkgs.nix pkgs.gitMinimal ]
                               ++ map (x: "${x}") (builtins.attrValues inputs)
@@ -802,7 +803,7 @@ index 3aeb0e5..bea0ac9 100644
                   build --accept-flake-config --no-link --print-out-paths \
                   ${./.}#nix-tools-static)/*.zip $out/
           '';
-          "nix-tools-static-arm64-no-ifd" = pkgs.runCommand "all-nix-tools" {
+          "nix-tools-static-arm64-no-ifd" = pkgs.runCommand "aarch64-linux-all-nix-tools" {
             requiredSystemFeatures = [ "recursive-nix" ];
             nativeBuildInputs = [ pkgs.nix pkgs.gitMinimal ]
                               ++ map (x: "${x}") (builtins.attrValues inputs)
