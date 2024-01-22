@@ -52,6 +52,7 @@ jobs:
       - name: "Compute default.nix"
         if: startsWith(github.ref, 'refs/tags/')
         run: |
+          git fetch --all
           git checkout origin/nix
           git reset --hard origin/nix
           (
