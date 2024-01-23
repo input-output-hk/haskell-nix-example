@@ -62,21 +62,21 @@ jobs:
           (
             echo "pkgs: let baseurl = \"https://github.com/input-output-hk/haskell-nix-example/releases/download/${GITHUB_REF_NAME}/\"; in {"
             for arch in aarch64-darwin x86_64-darwin aarch64-linux x86_64-linux; do
-              echo "  ${arch} = pkgs.fetchzip { "
+              echo "  ${arch} = pkgs.fetchurl { "
               echo "     name = \"${arch}-nix-tools-static\";"
               echo "     url = \"\${baseurl}${arch}-nix-tools-static.zip\";"
               echo "     sha256 = \"$(nix-hash --sri --type sha256 --flat ${arch}-nix-tools-static.zip)\";"
               echo "  };"
             done
             echo "}"
-          ) > nix-tools.nix
-          cat nix-tools.nix
+          ) > default.nix
+          cat default.nix
 
 
       - name: Push to nix branch
         run: |
-          git add nix-tools.nix
-          git commit -m "update nix-tools.nix"
+          git add default.nix
+          git commit -m "update default.nix"
           git push origin nix
 
       - name: Release
