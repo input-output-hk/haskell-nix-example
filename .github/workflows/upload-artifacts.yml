@@ -49,12 +49,16 @@ jobs:
           cp $(nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-linux.nix-tools-static-no-ifd --no-link --print-out-paths)/*.zip .
           cp $(nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-linux.nix-tools-static-arm64-no-ifd --no-link --print-out-paths)/*.zip .
 
+      - name: Configure Git
+        run: |
+          git config --global user.name 'Auto Update Bot'
+          git config --global user.email 'no-reply@iohk.io'
+
       - name: "Compute default.nix"
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           git fetch --all
-          git checkout origin/nix
-          git reset --hard origin/nix
+          git switch --force nix
           (
             echo "pkgs: let baseurl = \"https://github.com/input-output-hk/haskell-nix-example/releases/download/${GITHUB_REF_NAME}/\"; in {"
             for arch in aarch64-darwin x86_64-darwin aarch64-linux x86_64-linux; do
@@ -68,16 +72,12 @@ jobs:
           ) > nix-tools.nix
           cat nix-tools.nix
 
-      - name: Configure Git
-        run: |
-          git config --global user.name 'Auto Update Bot'
-          git config --global user.email 'no-reply@iohk.io'
 
       - name: Push to nix branch
         run: |
           git add nix-tools.nix
           git commit -m "update nix-tools.nix"
-          git push -u origin nix
+          git push origin nix
 
       - name: Release
         uses: input-output-hk/action-gh-release@v1
