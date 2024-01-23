@@ -68,6 +68,13 @@ jobs:
           ) > nix-tools.nix
           cat nix-tools.nix
 
+      - name: Configure Git
+        run: |
+          git config --global user.name 'Auto Update Bot'
+          git config --global user.email 'no-reply@iohk.io'
+
+      - name: Push to nix branch
+        run: |
           git add nix-tools.nix
           git commit -m "update nix-tools.nix"
           git push -u origin nix
