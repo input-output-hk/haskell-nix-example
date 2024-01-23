@@ -79,7 +79,7 @@ super: self: {
             # compress and put into hydra products
             installPhase = ''
                 mkdir -p $out/
-                zip -r -9 $out/${name'}.zip ${name'}/*
+                (cd ${name'} && zip -r -9 $out/${name'}.zip *)
 
                 mkdir -p $out/nix-support
                 echo "file binary-dist \"$(echo $out/*.zip)\"" \
