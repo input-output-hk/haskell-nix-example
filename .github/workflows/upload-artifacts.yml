@@ -50,6 +50,7 @@ jobs:
           cp $(nix build --builders "" --max-jobs 0 ${{ steps.flake-metadata.outputs.LOCKED_URL }}#hydraJobs.x86_64-linux.nix-tools-static-arm64-no-ifd --no-link --print-out-paths)/*.zip .
 
       - name: Configure Git
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           git config --global user.name 'Auto Update Bot'
           git config --global user.email 'no-reply@iohk.io'
@@ -74,6 +75,7 @@ jobs:
 
 
       - name: Push to nix branch
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           git add default.nix
           git commit -m "update default.nix"
