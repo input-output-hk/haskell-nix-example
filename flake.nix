@@ -179,6 +179,7 @@
                 "-L${lib.getLib static-libsodium-vrf}/lib"
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
             ];
           })
           ];
@@ -419,6 +420,15 @@
               # to call out to all kinds of silly tools that GHC doesn't really provide.
               # For this reason, we try to get away without re-installing lib:ghc for now.
               reinstallableLibGhc = false;
+            })
+            (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+              packages.cardano-db-sync.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+              ];
             })
           ];
         };
