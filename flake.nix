@@ -487,6 +487,12 @@ index 3aeb0e5..bea0ac9 100644
             };
           })
           (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.cabal-install.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+            ];
+            packages.hpack.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+            ];
             packages.nix-tools.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
                 "-L${lib.getLib static-libsodium-vrf}/lib"
