@@ -99,7 +99,7 @@
         # If we want to use a source-referenced flake we can do this as well
         kupoPkgs = pkgs: pkgs.haskell-nix.project' {
           # kupo builds with 8107
-          compiler-nix-name = "ghc963";
+          compiler-nix-name = "ghc964";
           # strip the package.yaml from the source. haskell.nix's tooling will
           # choke on this special one.
           src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
@@ -252,7 +252,7 @@
           })];
         };
         hydraPkgs = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc963";
+          compiler-nix-name = "ghc964";
           src = inputs.hydra;
 
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
@@ -386,7 +386,7 @@
           ];
         };
         dbSyncPkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc963";
+          compiler-nix-name = "ghc964";
           src = inputs.db-sync;
 
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
@@ -561,7 +561,7 @@ index 3aeb0e5..bea0ac9 100644
           ];
         };
         cardanoNodePkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc963";
+          compiler-nix-name = "ghc964";
           src = inputs.cardano-node;
 
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
