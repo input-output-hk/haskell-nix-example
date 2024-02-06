@@ -27,7 +27,7 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:input-output-hk/cardano-node?ref=8.7.2";
+    cardano-node.url = "github:input-output-hk/cardano-node?ref=8.7.3";
     cardano-node.flake = false;
 
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
@@ -43,8 +43,8 @@
   };
 
   outputs = { self, nixpkgs, flake-utils, haskellNix, ... }@inputs:
-    # choose the compiler you want. For now we use ghc963.
-    let compiler-nix-name = "ghc963"; in
+    # choose the compiler you want. For now we use ghc964.
+    let compiler-nix-name = "ghc964"; in
     let flake = flake-utils.lib.eachDefaultSystem (system:
       let
 
