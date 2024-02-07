@@ -430,6 +430,26 @@
                 "-L${lib.getLib static-libblst}/lib"
               ];
             })
+            # ok, so postgresql for static is pretty broken in nixpkgs.
+            # The only way I could see "fix" it was to disable multiple outputs,
+            # and patch a configure flag, which pointed to $(lib).
+            #
+            # The below hack is a bit less invasive, keeps the separate outputs,
+            # but adds $out/lib of postgresql to the search path, as well as adding
+            # libpgport and libpgcommon to the libraries we depend on. These are
+            # dependencies of the libpq, which cardano-db-sync uses.
+            #
+            # TODO: Figure out how to fix postgresql in upstream nixpkgs for musl
+            #       properly to include _all_ (including pgport and pgcommon) libraries
+            #       in $lib. We should also check why the static version of postgresql
+            #       as per the pkg-config script does _not_ include -lpgport -lpgcommon.
+            (pkgs.lib.mkIf pkgs.hostPlatform.isMusl {
+              packages.cardano-db-sync.ghcOptions = with pkgs; [
+                "-L${pkgs.postgresql}/lib"
+                "-optl=-lpgport"
+                "-optl=-lpgcommon"
+              ];
+            })
           ];
         };
         nixToolsPkg = pkgs: pkgs.haskell-nix.project' {
