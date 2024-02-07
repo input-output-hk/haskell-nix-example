@@ -99,7 +99,7 @@
         # If we want to use a source-referenced flake we can do this as well
         kupoPkgs = pkgs: pkgs.haskell-nix.project' {
           # kupo builds with 8107
-          compiler-nix-name = "ghc964";
+          compiler-nix-name = "ghc963";
           # strip the package.yaml from the source. haskell.nix's tooling will
           # choke on this special one.
           src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
