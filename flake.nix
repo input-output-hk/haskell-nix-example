@@ -385,8 +385,8 @@
           })
           ];
         };
-        dbSyncPkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc964";
+        dbSyncPkg = compiler-nix-name: pkgs: pkgs.haskell-nix.project' {
+          inherit compiler-nix-name;
           src = inputs.db-sync;
 
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
@@ -743,11 +743,21 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         dbSyncPackages.packages = {
-          db-sync            = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync";                                                  } (dbSyncPkg pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync            = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync";                                                    } (dbSyncPkg "ghc964" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
+          db-sync-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-static";                     } (dbSyncPkg "ghc964" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          db-sync-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-static";                     } (dbSyncPkg pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-db-sync-static"; } (dbSyncPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync";             } (dbSyncPkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-static";                     } (dbSyncPkg "ghc964" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-db-sync-static"; } (dbSyncPkg "ghc964" pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync";             } (dbSyncPkg "ghc964" pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        } // {
+          db-sync-8107                   = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync-8107";                                             } (dbSyncPkg "ghc8107" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
+          db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-8107-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-db-sync-8107-static"; } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-8107-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync-8107";             } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         };
 
         encoinsPackages.packages = {
