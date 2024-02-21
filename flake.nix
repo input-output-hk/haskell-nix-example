@@ -27,7 +27,7 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:input-output-hk/cardano-node?ref=8.7.3";
+    cardano-node.url = "github:input-output-hk/cardano-node?ref=8.8.0-pre";
     cardano-node.flake = false;
 
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
@@ -110,7 +110,9 @@
                 (baseNameOf path != "package.yaml")
               ];
           };
-          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+                       "https://chap.intersectmbo.org" = inputs.CHaP;
+                      };
           sha256map = {
             "https://github.com/CardanoSolutions/ogmios"."01f7787216e7ceb8e39c8c6807f7ae53fc14ab9e" = "18wxmz3452lwnd169r408b54h5grjws3q25i30nkl425sl4k8p87";
             "https://github.com/CardanoSolutions/direct-sqlite"."82c5ab46715ecd51901256144f1411b480e2cb8b" = "1r1g6nf65d9n436ppcjky3gkywpnx4y0a3v88ddngchmf8za3qky";
@@ -126,16 +128,6 @@
             ];
           }
           (pkgs.lib.mkIf (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) {
-            # this will disable --split-sections. Having --split-sections on will
-            # break the linker in GHC. And thus make iserv (e.g. aarch64-linux-musl)
-            # break during cross compilation. The UntypedPlutusCore.Evaluation.Machine.Cek.CekMachineCosts
-            # will produce an almost 1MB object file, with an unholy amount of sections. The linker is sadly
-            # quite stupid and maps each section into a page (4k on linux, 16k on darwin), and this quickly
-            # leads to sections being so far apart, that the linker can't relocate the entries properly
-            # anymore. To work around this, we disable --split-sections for plutus-core.
-            # TODO: fix GHC's linker properly.
-            packages.plutus-core.components.library.enableDeadCodeElimination = false;
-
             packages.plutus-core.patches = [
               # This patch is needed to fix a build error on aarch64-linux.
               #
@@ -321,17 +313,6 @@
             ];
           })
           (pkgs.lib.mkIf (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) {
-            # this will disable --split-sections. Having --split-sections on will
-            # break the linker in GHC. And thus make iserv (e.g. aarch64-linux-musl)
-            # break during cross compilation. The UntypedPlutusCore.Evaluation.Machine.Cek.CekMachineCosts
-            # will produce an almost 1MB object file, with an unholy amount of sections. The linker is sadly
-            # quite stupid and maps each section into a page (4k on linux, 16k on darwin), and this quickly
-            # leads to sections being so far apart, that the linker can't relocate the entries properly
-            # anymore. To work around this, we disable --split-sections for plutus-core.
-            # TODO: fix GHC's linker properly.
-            packages.plutus-core.components.library.enableDeadCodeElimination = false;
-            packages.plutus-tx.components.library.enableDeadCodeElimination = false;
-
             packages.plutus-core.patches = [
               # This patch is needed to fix a build error on aarch64-linux.
               #
@@ -430,14 +411,51 @@
                 "-L${lib.getLib static-libblst}/lib"
               ];
             })
+          (pkgs.lib.mkIf (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) {
+            packages.plutus-core.patches = [
+              # This patch is needed to fix a build error on aarch64-linux.
+              #
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl> plutus-core/src/PlutusCore/Evaluation/Machine/ExBudgetingDefaults.hs:67:6: error:
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>     • Exception when trying to run compile-time code:
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>         /build/plutus-core-1.5.0.1/plutus-core/src/PlutusCore/Evaluation/Machine: getDirectoryContents:openDirStream: invalid argument (Invalid argument)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>       Code: readJSONFromFile DFP.cekMachineCostsFile
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>     • In the Template Haskell splice
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>         $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>       In the expression: $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>       In an equation for ‘defaultCekMachineCosts’:
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>           defaultCekMachineCosts
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>             = $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>    |
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl> 67 |   $$(readJSONFromFile DFP.cekMachineCostsFile)
+              # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl>    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              (builtins.toFile "plutus-core.patch" ''
+              diff --git a/plutus-core/src/Data/Aeson/THReader.hs b/plutus-core/src/Data/Aeson/THReader.hs
+              index 4b812b3..5290f87 100644
+              --- a/plutus-core/src/Data/Aeson/THReader.hs
+              +++ b/plutus-core/src/Data/Aeson/THReader.hs
+              @@ -5,10 +5,11 @@ import Data.Aeson
+               import Language.Haskell.TH.Syntax
+               import Language.Haskell.TH.Syntax.Compat
+               import TH.RelativePaths
+              +import qualified Data.ByteString.Lazy as LBS
+
+               readJSONFromFile :: (FromJSON a, Lift a) => String -> SpliceQ a
+               readJSONFromFile name = liftSplice $ do
+              -    contents <- qReadFileLBS name
+              +    contents <- qRunIO $ LBS.readFile name
+                   case (eitherDecode contents) of
+                       Left err  -> fail err
+                       Right res -> examineSplice [||res||]
+              '')
+            ];
+          })
             # ok, so postgresql for static is pretty broken in nixpkgs.
             # The only way I could see "fix" it was to disable multiple outputs,
             # and patch a configure flag, which pointed to $(lib).
             #
             # The below hack is a bit less invasive, keeps the separate outputs,
             # but adds $out/lib of postgresql to the search path, as well as adding
-            # libpgport and libpgcommon to the libraries we depend on. These are
-            # dependencies of the libpq, which cardano-db-sync uses.
+            # libpgport and libpgcommon to the libraries we depend on.
             #
             # TODO: Figure out how to fix postgresql in upstream nixpkgs for musl
             #       properly to include _all_ (including pgport and pgcommon) libraries
@@ -445,9 +463,8 @@
             #       as per the pkg-config script does _not_ include -lpgport -lpgcommon.
             (pkgs.lib.mkIf pkgs.hostPlatform.isMusl {
               packages.cardano-db-sync.ghcOptions = with pkgs; [
-                "-L${pkgs.postgresql}/lib"
-                "-optl=-lpgport"
-                "-optl=-lpgcommon"
+                # Add pgport and pgcommon as link dependencies.
+                "-L${pkgs.postgresql}/lib" "-optl-Wl,-lpgport" "-optl-Wl,-lpgcommon"
               ];
             })
           ];
@@ -584,7 +601,10 @@ index 3aeb0e5..bea0ac9 100644
           compiler-nix-name = "ghc964";
           src = inputs.cardano-node;
 
-          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://chap.intersectmbo.org/" = inputs.CHaP;
+          };
           modules = [({
             packages.double-conversion.ghcOptions = [
               # stop putting U __gxx_personality_v0 into the library!
@@ -743,21 +763,28 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         dbSyncPackages.packages = {
-          db-sync            = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync";                                                    } (dbSyncPkg "ghc964" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync                   = let plat = pkgs;                                      hsPkgs = (dbSyncPkg "ghc964" pkgs).hsPkgs;
+                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
-          db-sync-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-static";                     } (dbSyncPkg "ghc964" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc964" pkgs).hsPkgs;
+                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static--${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";} hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          db-sync-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-static";                     } (dbSyncPkg "ghc964" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-db-sync-static"; } (dbSyncPkg "ghc964" pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync";             } (dbSyncPkg "ghc964" pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc964" plat).hsPkgs;
+                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-static-musl-arm64 = let plat = pkgs.pkgsCross.aarch64-multiplatform-musl; hsPkgs = (dbSyncPkg "ghc964" plat).hsPkgs;
+                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-dynamic-arm64     = let plat = pkgs.pkgsCross.aarch64-multiplatform;      hsPkgs = (dbSyncPkg "ghc964" plat).hsPkgs;
+                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // {
           db-sync-8107                   = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync-8107";                                             } (dbSyncPkg "ghc8107" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
-          db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          # we can not build this, text-2 prohibits aarch64 with 8107.
+          # db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-8107-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-db-sync-8107-static"; } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-8107-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync-8107";             } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          # we can not build this, text-2 prohibits aarch64 with 8107.
+          # db-sync-8107-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-db-sync-8107-static"; } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          # db-sync-8107-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync-8107";             } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         };
 
         encoinsPackages.packages = {
