@@ -21,7 +21,7 @@
     hydra.url = "github:input-output-hk/hydra";
     hydra.flake = false;
 
-    db-sync.url = "github:input-output-hk/cardano-db-sync";
+    db-sync.url = "github:input-output-hk/cardano-db-sync?ref=13.1.0.2";
     db-sync.flake = false;
 
     encoins.url = "github:encryptedcoins/encoins-relay";
@@ -394,6 +394,12 @@
               packages.cardano-config.flags.systemd = false;
               packages.cardano-node.flags.systemd = false;
             })
+            ({
+              packages.cardano-crypto-praos.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf ] ];
+              # TODO: why is this necessary? This shouldn't be the default.
+              #       does db-sync set this flag?
+              packages.cardano-crypto-praos.flags.external-libsodium-vrf = true;
+            })
             # Fix compilation with newer ghc versions
             ({ lib, config, ... }:
               lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
@@ -763,17 +769,17 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         dbSyncPackages.packages = {
-          db-sync                   = let plat = pkgs;                                      hsPkgs = (dbSyncPkg "ghc964" pkgs).hsPkgs;
+          db-sync                   = let plat = pkgs;                                      hsPkgs = (dbSyncPkg "ghc810" pkgs).hsPkgs;
                                       in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
-          db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc964" pkgs).hsPkgs;
-                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static--${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";} hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc810" pkgs).hsPkgs;
+                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}-${inputs.db-sync.shortRev}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc964" plat).hsPkgs;
+          db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
                                       in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-static-musl-arm64 = let plat = pkgs.pkgsCross.aarch64-multiplatform-musl; hsPkgs = (dbSyncPkg "ghc964" plat).hsPkgs;
+          db-sync-static-musl-arm64 = let plat = pkgs.pkgsCross.aarch64-multiplatform-musl; hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
                                       in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-dynamic-arm64     = let plat = pkgs.pkgsCross.aarch64-multiplatform;      hsPkgs = (dbSyncPkg "ghc964" plat).hsPkgs;
+          db-sync-dynamic-arm64     = let plat = pkgs.pkgsCross.aarch64-multiplatform;      hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
                                       in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // {
           db-sync-8107                   = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync-8107";                                             } (dbSyncPkg "ghc8107" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
