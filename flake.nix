@@ -27,7 +27,7 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:input-output-hk/cardano-node?ref=8.8.0-pre";
+    cardano-node.url = "github:input-output-hk/cardano-node?ref=8.9.0";
     cardano-node.flake = false;
 
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
