@@ -33,6 +33,17 @@
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
     nix-tools.flake = false;
 
+    # rust stuff
+    crane.url = "github:ipetkov/crane";
+    crane.inputs.nixpkgs.follows = "nixpkgs";
+
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
+    rust-overlay.inputs.flake-utils.follows = "flake-utils";
+
+    mithril.url = "github:input-output-hk/mithril?ref=2408.0";
+    mithril.flake = false;
+
     # kupo needs the crypto overlays from iohk-nix
     iohkNix.url = "github:input-output-hk/iohk-nix";
     # kupo also needs cardano-haskell-packages
@@ -42,7 +53,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, haskellNix, ... }@inputs:
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, haskellNix, ... }@inputs:
     # choose the compiler you want. For now we use ghc964.
     let compiler-nix-name = "ghc964"; in
     let flake = flake-utils.lib.eachDefaultSystem (system:
@@ -86,6 +97,15 @@
           # Also ensure we are using haskellNix config. Otherwise we won't be
           # selecting the correct wine version for cross compilation.
           inherit (haskellNix) config;
+        };
+        rsPkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            (import rust-overlay)
+            (final: prev: {
+              static-openssl = (final.openssl.override { static = true; });
+            })
+          ];
         };
 
         # If we are building a haskell project (e.g. the current directory)
@@ -898,6 +918,69 @@ index 3aeb0e5..bea0ac9 100644
                   ${./.}#nix-tools-static-arm64)/*.zip $out/
           '';
         };
+        mithrilPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-linux")
+          (let mithril-signer = let
+              rustToolchain = rsPkgs.rust-bin.stable.latest.default.override {
+                targets = [ "x86_64-unknown-linux-musl" ];
+              };
+              craneLib = (inputs.crane.mkLib pkgs.pkgsCross.musl64).overrideToolchain rustToolchain;
+              in craneLib.buildPackage (rec {
+                src = inputs.mithril;
+                strictDeps = true;
+
+                inherit (craneLib.crateNameFromCargoToml { cargoTomlContents = builtins.readFile "${inputs.mithril}/mithril-signer/Cargo.toml";}) pname version;
+                cargoExtraArgs = "-p mithril-signer";
+                nativeBuildInputs = [
+                  rsPkgs.pkg-config
+                  rsPkgs.gnum4
+                ];
+                buildInputs = with rsPkgs.pkgsCross.musl64; [ static-openssl ];
+
+                # rustdoc needs libgcc
+                # LD_LIBRARY_PATH = "${pkgs.lib.getLib rsPkgs.pkgsCross.musl64.libgcc}/lib";
+
+                # force-cross needed for `gmp-mpfr-sys'
+                CARGO_FEATURE_FORCE_CROSS = "true";
+                CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
+                CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
+              });
+
+              mithril-signer-arm = let
+              rustToolchain = rsPkgs.rust-bin.stable.latest.default.override {
+                targets = [ "aarch64-unknown-linux-musl" ];
+              };
+              craneLib = (inputs.crane.mkLib pkgs.pkgsCross.aarch64-multiplatform-musl).overrideToolchain rustToolchain;
+              in craneLib.buildPackage (rec {
+                src = inputs.mithril;
+                strictDeps = true;
+
+                depsBuildBuild = with pkgs.pkgsCross.aarch64-multiplatform-musl.buildPackages; [
+                  # qemu
+                ];
+
+                inherit (craneLib.crateNameFromCargoToml { cargoTomlContents = builtins.readFile "${inputs.mithril}/mithril-signer/Cargo.toml";}) pname version;
+                cargoExtraArgs = "-p mithril-signer";
+                nativeBuildInputs = [
+                  rsPkgs.pkg-config
+                  rsPkgs.gnum4
+                ];
+                buildInputs = with rsPkgs.pkgsCross.aarch64-multiplatform-musl; [ static-openssl ];
+
+                # rustdoc needs libgcc
+                # LD_LIBRARY_PATH = "${pkgs.lib.getLib rsPkgs.pkgsCross.musl64.libgcc}/lib";
+
+                # force-cross needed for `gmp-mpfr-sys'
+                CARGO_FEATURE_FORCE_CROSS = "true";
+                CARGO_BUILD_TARGET = "aarch64-unknown-linux-musl";
+                # I have no idea why we fail to link libc here. WTF.
+                CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static -C link-args=-lc";
+                CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER = "aarch64-unknown-linux-musl-cc";
+                CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUNNER = "qemu-aarch64";
+              });
+          in {
+            mithril-signer-static = pkgs.packaging.asZip { name = "${mithril-signer.stdenv.hostPlatform.system}-mithril-signer-${mithril-signer.version}-${inputs.mithril.shortRev}"; } mithril-signer;
+            mithril-signer-static-arm64 = pkgs.packaging.asZip { name = "${mithril-signer-arm.stdenv.hostPlatform.system}-mithril-signer-${mithril-signer-arm.version}-${inputs.mithril.shortRev}"; } mithril-signer-arm;
+        });
         # ; in nix-tools-pkgs // { default-nix = (import nixpkgs { system = "x86_64-linux" }).runCommand "default.nix" { buildInputs = [] } (''
         #     mkdir -p $out/nix-support
         #     echo "pkgs: baseurl: {" > $out/default.nix
@@ -915,7 +998,7 @@ index 3aeb0e5..bea0ac9 100644
       in addHydraJobs (
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
-          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages nixToolsPackages nixToolsPackagesNoIfd ]
+          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages nixToolsPackages nixToolsPackagesNoIfd mithrilPackages ]
       )
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; });
           lib.recursiveUpdate flake {
