@@ -134,6 +134,26 @@
         "type": "github"
       }
     },
+    "crane": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1710003968,
+        "narHash": "sha256-g8+K+mLiNG5uch35Oy9oDQBAmGSkCcqrd0Jjme7xiG0=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "10484f86201bb94bd61ecc5335b1496794fedb78",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
     "db-sync": {
       "flake": false,
       "locked": {
@@ -313,11 +333,11 @@
         "stackage": "stackage"
       },
       "locked": {
-        "lastModified": 1710740244,
-        "narHash": "sha256-1jjLQYOy7ZpqjY6yVlDhYRBbifGu5DNWgxUJZrJ07os=",
+        "lastModified": 1710828274,
+        "narHash": "sha256-GmCvhqJWBTxP4ohSggGWwvJjMdIY8qP0/RhIIRhbbXI=",
         "owner": "input-output-hk",
         "repo": "haskell.nix",
-        "rev": "af3a4a8ba2b971a2a0d1229a842e4150930b9f38",
+        "rev": "9f55274618f3da19ab10b7b966f0d54c29c71c81",
         "type": "github"
       },
       "original": {
@@ -569,6 +589,23 @@
       "original": {
         "owner": "kristapsdz",
         "repo": "lowdown",
+        "type": "github"
+      }
+    },
+    "mithril": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1708680939,
+        "narHash": "sha256-nmS2zNBs3ORveI6F/gXfdXPRnbuFhccqNXicT/Pmhhc=",
+        "owner": "input-output-hk",
+        "repo": "mithril",
+        "rev": "5afc6fcd44869db7ca48bab9ba124a3606aeedeb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "input-output-hk",
+        "ref": "2408.0",
+        "repo": "mithril",
         "type": "github"
       }
     },
@@ -842,6 +879,7 @@
       "inputs": {
         "CHaP": "CHaP",
         "cardano-node": "cardano-node",
+        "crane": "crane",
         "db-sync": "db-sync",
         "encoins": "encoins",
         "flake-utils": "flake-utils",
@@ -850,12 +888,37 @@
         "iohkNix": "iohkNix",
         "iserv-proxy": "iserv-proxy",
         "kupo": "kupo",
+        "mithril": "mithril",
         "nix-tools": "nix-tools",
         "nixpkgs": [
           "haskellNix",
           "nixpkgs-unstable"
         ],
-        "ogmios": "ogmios"
+        "ogmios": "ogmios",
+        "rust-overlay": "rust-overlay"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1710727870,
+        "narHash": "sha256-Ulsx+t4SnRmjMJx4eF2Li+3rBGYhZp0XNShVjIheCfg=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "a1b17cacfa7a6ed18f553a195a047f4e73e95da9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     },
     "secp256k1": {
