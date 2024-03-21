@@ -89,6 +89,7 @@
               static-gmp = (final.gmp.override { withStatic = true; }).overrideDerivation (old: {
                 configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ];
               });
+              static-libcxxabi = (final.libcxxabi.override { enableShared = false; });
               static-libblst = (final.libblst.override { enableShared = false; }).overrideDerivation (old: {
                 postFixup = "";
               });
@@ -692,6 +693,12 @@ index 3aeb0e5..bea0ac9 100644
           modules = [
             ({ lib, config, ... }:{
               packages.Cabal.patches = lib.mkForce [];
+            })
+            (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+              packages.cabal-install.components.exes.cabal.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libcxxabi}/lib"
+              ];
             })
           ];
         };
