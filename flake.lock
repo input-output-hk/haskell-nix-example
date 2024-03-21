@@ -101,6 +101,23 @@
         "type": "github"
       }
     },
+    "cabal-install": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1710231346,
+        "narHash": "sha256-I4ide7LZXDNjGvM3eIKEE/lDLzLEqY57mDLrFEWASys=",
+        "owner": "haskell",
+        "repo": "cabal",
+        "rev": "256f85d735310196d437ede86046f2a86efedc6d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "haskell",
+        "ref": "Cabal-v3.10.3.0",
+        "repo": "cabal",
+        "type": "github"
+      }
+    },
     "cardano-node": {
       "flake": false,
       "locked": {
@@ -878,6 +895,7 @@
     "root": {
       "inputs": {
         "CHaP": "CHaP",
+        "cabal-install": "cabal-install",
         "cardano-node": "cardano-node",
         "crane": "crane",
         "db-sync": "db-sync",
