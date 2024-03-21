@@ -33,6 +33,9 @@
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
     nix-tools.flake = false;
 
+    cabal-install.url = "github:haskell/cabal?ref=Cabal-v3.10.3.0";
+    cabal-install.flake = false;
+
     # rust stuff
     crane.url = "github:ipetkov/crane";
     crane.inputs.nixpkgs.follows = "nixpkgs";
@@ -683,6 +686,15 @@ index 3aeb0e5..bea0ac9 100644
           name = "hello";
           version = "1.0.0.2";
         };
+        cabalPkg = pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc964";
+          src = inputs.cabal-install;
+          modules = [
+            ({ lib, config, ... }:{
+              packages.Cabal.patches = lib.mkForce [];
+            })
+          ];
+        };
       in
       # This is the _very_ basic flake output. It just builds the hello package,
       # and has no cross logic, also set it to the default package.
@@ -839,6 +851,22 @@ index 3aeb0e5..bea0ac9 100644
           # cardano-submit-api-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-submit-api-static";  } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
           # cardano-submit-api-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-submit-api";              } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
         };
+        cabalInstallPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+          cabal-install-static = let cabal = (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal; in
+            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
+        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          cabal-install = let cabal = (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal; in
+            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
+          cabal-install-static = let cabal = (cabalPkg pkgs.pkgsCross.musl64).hsPkgs.cabal-install.components.exes.cabal; in
+            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
+          cabal-install-static-arm64 = let cabal = (cabalPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cabal-install.components.exes.cabal; in
+            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
+          cabal-install-ucrt = let cabal = (cabalPkg pkgs.pkgsCross.ucrt64).hsPkgs.cabal-install.components.exes.cabal; in
+            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
+          cabal-install-mingwW64 = let cabal = (cabalPkg pkgs.pkgsCross.mingwW64).hsPkgs.cabal-install.components.exes.cabal; in
+            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
+        };
+
         nixToolsPackages.packages =
         let components = ["cabal-name" "cabal-to-nix" "hackage-to-nix" "hashes-to-nix" "lts-to-nix" "make-install-plan" "plan-to-nix" "stack-repos" "stack-to-nix" "truncate-index" ]; in
         # This is commented out, we don't want each and every executable by itself. They should all be rolled up into
@@ -998,7 +1026,7 @@ index 3aeb0e5..bea0ac9 100644
       in addHydraJobs (
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
-          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages nixToolsPackages nixToolsPackagesNoIfd mithrilPackages ]
+          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages nixToolsPackages nixToolsPackagesNoIfd mithrilPackages cabalInstallPackages ]
       )
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; });
           lib.recursiveUpdate flake {
