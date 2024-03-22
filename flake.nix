@@ -761,7 +761,7 @@ index 3aeb0e5..bea0ac9 100644
         # we can only cross compile x86_64-linux -> aarch64-linux.
         in pkgs.lib.optionalAttrs (system == "x86_64-linux") {
             packages.hello-static-musl = helloPkg-static-musl.components.exes.hello;
-            packages.hello-dynamic = helloPkg-dynamic.components.exes.hello;
+            # packages.hello-dynamic = helloPkg-dynamic.components.exes.hello;
             packages.hello-mingw = helloPkg-mingw.components.exes.hello;
             packages.hello-ucrt64 = helloPkg-ucrt64.components.exes.hello;
             packages.hello-javascript = helloPkg-javascript.components.exes.hello;
@@ -771,7 +771,7 @@ index 3aeb0e5..bea0ac9 100644
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           kupo-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-kupo-static";                     } (kupoPkgs pkgs.pkgsCross.musl64                    ).hsPkgs.kupo.components.exes.kupo;
           kupo-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-kupo-static"; } (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.kupo.components.exes.kupo;
-          kupo-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-kupo";             } (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.kupo.components.exes.kupo;
+          # kupo-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-kupo";             } (kupoPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.kupo.components.exes.kupo;
 
           # kupo requires the unix package, so we can't build mingwW64 or ucrt64 really.
           # kupo-mingw       = (kupoPkgs pkgs.pkgsCross.mingwW64                  ).hsPkgs.kupo.components.exes.kupo;
@@ -788,7 +788,7 @@ index 3aeb0e5..bea0ac9 100644
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           ogmios-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-ogmios-static";                     } (ogmiosPkgs pkgs.pkgsCross.musl64                    ).hsPkgs.ogmios.components.exes.ogmios;
           ogmios-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-ogmios-static"; } (ogmiosPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.ogmios.components.exes.ogmios;
-          ogmios-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-ogmios";             } (ogmiosPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.ogmios.components.exes.ogmios;
+          # ogmios-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-ogmios";             } (ogmiosPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.ogmios.components.exes.ogmios;
         };
 
         # --ghc-option='-fplugin-library=${plutus-tx-plugin}/libplutus-tx-plugin.a;plutus-tx-plugin;PlutusTx.Plugin;[]'
@@ -804,7 +804,7 @@ index 3aeb0e5..bea0ac9 100644
 
           hydra-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-hydra-node-static";                     } (hydraPkgs pkgs.pkgsCross.musl64                    ).hsPkgs.hydra-node.components.exes.hydra-node;
           hydra-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-hydra-node-static"; } (hydraPkgs pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.hydra-node.components.exes.hydra-node;
-          hydra-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-hydra-node";             } (hydraPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.hydra-node.components.exes.hydra-node;
+          # hydra-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-hydra-node";             } (hydraPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.hydra-node.components.exes.hydra-node;
         };
 
         dbSyncPackages.packages = {
@@ -818,8 +818,8 @@ index 3aeb0e5..bea0ac9 100644
                                       in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
           db-sync-static-musl-arm64 = let plat = pkgs.pkgsCross.aarch64-multiplatform-musl; hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
                                       in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-dynamic-arm64     = let plat = pkgs.pkgsCross.aarch64-multiplatform;      hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
-                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          # db-sync-dynamic-arm64     = let plat = pkgs.pkgsCross.aarch64-multiplatform;      hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
+          #                             in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // {
           db-sync-8107                   = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync-8107";                                             } (dbSyncPkg "ghc8107" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
@@ -837,7 +837,7 @@ index 3aeb0e5..bea0ac9 100644
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           encoins-relay-server-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-encoins-relay-server-static";                     } (encoinsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
           encoins-relay-server-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-encoins-relay-server-static"; } (encoinsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
-          encoins-relay-server-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-encoins-relay-server";             } (encoinsPkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
+          # encoins-relay-server-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-encoins-relay-server";             } (encoinsPkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
         };
 
         cardanoNodePackages.packages = {
@@ -858,21 +858,27 @@ index 3aeb0e5..bea0ac9 100644
           # cardano-submit-api-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-submit-api-static";  } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
           # cardano-submit-api-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-submit-api";              } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
         };
-        cabalInstallPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
-          cabal-install-static = let cabal = (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal; in
-            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
-        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          cabal-install = let cabal = (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal; in
-            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
-          cabal-install-static = let cabal = (cabalPkg pkgs.pkgsCross.musl64).hsPkgs.cabal-install.components.exes.cabal; in
-            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
-          cabal-install-static-arm64 = let cabal = (cabalPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cabal-install.components.exes.cabal; in
-            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
-          cabal-install-ucrt = let cabal = (cabalPkg pkgs.pkgsCross.ucrt64).hsPkgs.cabal-install.components.exes.cabal; in
-            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
-          cabal-install-mingwW64 = let cabal = (cabalPkg pkgs.pkgsCross.mingwW64).hsPkgs.cabal-install.components.exes.cabal; in
-            pkgs.packaging.asZip { name = "${cabal.stdenv.hostPlatform.system}-cabal-install-${cabal.version}-${inputs.cabal-install.shortRev}"; } cabal;
-        };
+        cabalInstallPackages.packages =
+          let cabal = pkgs: (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal;
+              pkg = comps: pkgs.packaging.asZip {
+                name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
+                  comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
+                  comp.passthru.identifier.name      # pkg name, e.g. cabal-install
+                  comp.version                       # component version, e.g. 3.10.3.0
+                  comp.src.origSrc.shortRev          # source rev, e.g. 256f85d
+                ];
+              } comps;
+          in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+            cabal-install-static       = pkg (cabal pkgs);
+          } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+            cabal-install-static       = pkg (cabal pkgs.pkgsCross.musl64);
+            cabal-install-static-arm64 = pkg (cabal pkgs.pkgsCross.aarch64-multiplatform-musl);
+            cabal-install-ucrt         = pkg (cabal pkgs.pkgsCross.ucrt64);
+            cabal-install-mingwW64     = pkg (cabal pkgs.pkgsCross.mingwW64);
+          };
+          #  // {
+          #   cabal-install-dynamic      = pkg (cabal pkgs);
+          # };
 
         nixToolsPackages.packages =
         let components = ["cabal-name" "cabal-to-nix" "hackage-to-nix" "hashes-to-nix" "lts-to-nix" "make-install-plan" "plan-to-nix" "stack-repos" "stack-to-nix" "truncate-index" ]; in
