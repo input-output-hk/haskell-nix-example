@@ -27,7 +27,7 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:input-output-hk/cardano-node?ref=8.9.0";
+    cardano-node.url = "github:input-output-hk/cardano-node?ref=8.9.1";
     cardano-node.flake = false;
 
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
@@ -840,24 +840,24 @@ index 3aeb0e5..bea0ac9 100644
           # encoins-relay-server-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-encoins-relay-server";             } (encoinsPkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
         };
 
-        cardanoNodePackages.packages = {
-          cardano-tools = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-tools"; } (map (exe: (cardanoNodePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"]);
-          # cardano-node = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-node"; } (cardanoNodePkg pkgs).hsPkgs.cardano-node.components.exes.cardano-node;
-          # cardano-cli  = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-cli";  } (cardanoNodePkg pkgs).hsPkgs.cardano-cli.components.exes.cardano-cli;
-          # cardano-submit-api = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-cardano-submit-api";  } (cardanoNodePkg pkgs).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
-        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          cardano-tools-static-musl      = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-tools-static";                     } (map (exe: (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"]);
-          cardano-tools-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-tools-static"; } (map (exe: (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"]);
-          # cardano-node-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-node-static";                     } (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-node.components.exes.cardano-node;
-          # cardano-node-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-node-static"; } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-node.components.exes.cardano-node;
-          # cardano-node-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-node";             } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-node.components.exes.cardano-node;
-          # cardano-cli-static-musl        = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-cli-static";                      } (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-cli.components.exes.cardano-cli;
-          # cardano-cli-static-musl-arm64  = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-cli-static";  } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-cli.components.exes.cardano-cli;
-          # cardano-cli-dynamic-arm64      = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-cli";              } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-cli.components.exes.cardano-cli;
-          # cardano-submit-api-static-musl = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-cardano-submit-api-static";               } (cardanoNodePkg pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
-          # cardano-submit-api-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-cardano-submit-api-static";  } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
-          # cardano-submit-api-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-cardano-submit-api";              } (cardanoNodePkg pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-submit-api.components.exes.cardano-submit-api;
-        };
+        cardanoNodePackages.packages =
+          let node = pkgs: map (exe: (cardanoNodePkgs pkgs).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"];
+              pkg = comps: pkgs.packaging.asZip {
+                name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
+                  comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
+                  comp.passthru.identifier.name      # pkg name, e.g. cabal-install
+                  comp.version                       # component version, e.g. 3.10.3.0
+                  comp.src.origSrc.shortRev          # source rev, e.g. 256f85d
+                ];
+              } comps;
+          in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+            cardano-tools = pkg (node pkgs);
+          } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+            cardano-tools-static       = pkg (node pkgs.pkgsCross.musl64);
+            cardano-tools-static-arm64 = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
+            cardano-tools-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
+            cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
+          };
         cabalInstallPackages.packages =
           let cabal = pkgs: (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal;
               pkg = comps: pkgs.packaging.asZip {
