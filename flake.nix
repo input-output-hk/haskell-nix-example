@@ -841,7 +841,7 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         cardanoNodePackages.packages =
-          let node = pkgs: map (exe: (cardanoNodePkgs pkgs).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"];
+          let node = pkgs: map (exe: (cardanoNodePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"];
               pkg = comps: pkgs.packaging.asZip {
                 name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
                   comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
