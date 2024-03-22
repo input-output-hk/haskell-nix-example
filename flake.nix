@@ -504,7 +504,9 @@
           # allow-newer: *:base, *:ghc-prim, *:template-haskell
           # '';
           compiler-nix-name = "ghc928";
-          src = "${inputs.nix-tools}/nix-tools";
+          # subdir option, that retains the inputs logic.
+          src = let subdir = input: path: input // { outPath = "${input}/${path}"; };
+                in subdir inputs.nix-tools "nix-tools";
 
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
           modules = [
@@ -841,7 +843,11 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         cardanoNodePackages.packages =
-          let node = pkgs: map (exe: (cardanoNodePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) ["cardano-cli" "cardano-node" "cardano-submit-api"];
+          let node = pkgs: map (exe: (cardanoNodePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+                "cardano-node" "cardano-submit-api"
+                # cardano-cli comes from CHaP, otherwise we'd have to pull it from the cardano-cli repo.
+                "cardano-cli"
+              ];
               pkg = comps: pkgs.packaging.asZip {
                 name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
                   comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
@@ -881,33 +887,30 @@ index 3aeb0e5..bea0ac9 100644
           # };
 
         nixToolsPackages.packages =
-        let components = ["cabal-name" "cabal-to-nix" "hackage-to-nix" "hashes-to-nix" "lts-to-nix" "make-install-plan" "plan-to-nix" "stack-repos" "stack-to-nix" "truncate-index" ]; in
-        # This is commented out, we don't want each and every executable by itself. They should all be rolled up into
-        # one nix-tools package per platform.
-
-
-        # pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg) {} (map (exe: {
-        #   "${exe}" = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-${exe}"; } (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe};
-        # } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-        #   "${exe}-static-musl"       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-${exe}-static";                     } (nixToolsPkg pkgs.pkgsCross.musl64                    ).hsPkgs.nix-tools.components.exes.${exe};
-        #   "${exe}-static-musl-arm64" = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-${exe}-static"; } (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.nix-tools.components.exes.${exe};
-        # }) components)
-        # //
-        pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
-          "nix-tools-static"       = with (nixToolsPkg pkgs).hsPkgs;
-                                     pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-nix-tools-static";                                      }
-                                     ([ cabal-install.components.exes.cabal hpack.components.exes.hpack ]
-                                     ++ map (exe: nix-tools.components.exes.${exe}.overrideDerivation (_: { stripDebugFlags = []; })) components);
+        let nix-tools = pkgs:
+                          (map (exe: (nixToolsPkg pkgs).hsPkgs.nix-tools.components.exes.${exe}.overrideDerivation (_: { stripDebugFlags = []; }))
+                                   ["cabal-name" "cabal-to-nix" "hackage-to-nix" "hashes-to-nix" "lts-to-nix" "make-install-plan" "plan-to-nix" "stack-repos" "stack-to-nix" "truncate-index" ])
+                           ++
+                           (with (nixToolsPkg pkgs).hsPkgs;
+                                   [ cabal-install.components.exes.cabal hpack.components.exes.hpack ])
+                          ;
+            pkg = comps: pkgs.packaging.asZip {
+              name = (let comp = if __isList comps then __head comps else comps; in
+                      builtins.concatStringsSep "-" ([
+                        comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
+                        comp.passthru.identifier.name      # pkg name, e.g. cabal-install
+                        comp.version                       # component version, e.g. 3.10.3.0
+                      ] ++ (if (comp.src ? origSrc && comp.src.origSrc ? shortRev) then [
+                        comp.src.origSrc.shortRev          # source rev, e.g. 256f85d
+                      ] else [])));
+              } comps;
+        in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+          nix-tools-static          = pkg (nix-tools pkgs);
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          "nix-tools-static"       = with (nixToolsPkg pkgs.pkgsCross.musl64).hsPkgs;
-                                     pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-nix-tools-static";                     }
-                                     ([ cabal-install.components.exes.cabal hpack.components.exes.hpack ]
-                                     ++ map (exe: nix-tools.components.exes.${exe}) components);
-
-          "nix-tools-static-arm64" = with (nixToolsPkg pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs;
-                                     pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-nix-tools-static"; }
-                                     ([ cabal-install.components.exes.cabal hpack.components.exes.hpack ]
-                                     ++ map (exe: nix-tools.components.exes.${exe}) components);
+          nix-tools-static          = pkg (nix-tools pkgs.pkgsCross.musl64);
+          nix-tools-static-arm64    = pkg (nix-tools pkgs.pkgsCross.aarch64-multiplatform-musl);
+          # nix-tools-static-ucrt     = pkg (nix-tools pkgs.pkgsCross.ucrt64);
+          # nix-tools-static-mingwW64 = pkg (nix-tools pkgs.pkgsCross.mingwW64);
         };
         nixToolsPackagesNoIfd.packages =
         pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
