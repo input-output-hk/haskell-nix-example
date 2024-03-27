@@ -37,10 +37,33 @@ super: self: {
 
             buildPhase = ''
                 mkdir -p ${name'}
+            '' + (if targetPlatform.isWindows then ''
+                for comp in ${builtins.concatStringsSep " " (map (drv: drv.out) drvs)}; do
+                    # copy executables over
+                    for exe in $comp/bin/*.exe; do
+                        cp $exe ${name'}/
+                    done
+                    # copy over dlls, but check if they are already there, and
+                    # only copy if they are missing. Error out if they are different.
+                    for dll in $comp/bin/*.dll; do
+                        f=$(basename $dll)
+                        if [ -e ${name'}/$f ]; then
+                            MD5=$(md5sum $dll |awk '{ print $1 }')
+                            MD5_=$(md5sum ${name'}/$f |awk '{ print $1 }')
+                            if [ "$MD5" != "$MD5_" ]; then
+                                echo "ERROR: $dll and ${name'}/$f have different content"
+                                exit 1
+                            fi
+                        else
+                            cp $dll ${name'}/
+                        fi
+                    done
+                done
+            '' else ''
                 for comp in ${builtins.concatStringsSep " " (map (drv: drv.out) drvs)}; do
                     cp $comp/bin/* ${name'}/
                 done
-            ''
+            '')
             # set the interpreter to the default expected location on linux. (See interpForSystem above)
             + pkgs.lib.optionalString (targetPlatform.isLinux && targetPlatform.isGnu) ''
                 for bin in ${name'}/*; do
@@ -49,8 +72,6 @@ super: self: {
                 patchelf --set-interpreter ${interpForSystem targetPlatform.system} $bin
                 chmod $mode $bin
                 done
-            '' + pkgs.lib.optionalString (targetPlatform.isWindows) ''
-                # may need to copy dlls
             '' + pkgs.lib.optionalString (targetPlatform.isLinux && targetPlatform.isGnu) ''
                 # need to copy referenced *.so* files.
             '' + pkgs.lib.optionalString (targetPlatform.isDarwin) ''
