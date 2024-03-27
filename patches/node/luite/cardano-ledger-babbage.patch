@@ -1,0 +1,339 @@
+diff --git a/src/Cardano/Ledger/Babbage.hs b/src/Cardano/Ledger/Babbage.hs
+index 87b4a4b..56b46a7 100644
+--- a/src/Cardano/Ledger/Babbage.hs
++++ b/src/Cardano/Ledger/Babbage.hs
+@@ -8,6 +8,7 @@
+ -- CanStartFromGenesis
+ {-# OPTIONS_GHC -Wno-deprecations #-}
+ {-# OPTIONS_GHC -Wno-orphans #-}
++{-# OPTIONS_GHC -fspecialize-aggressively -fexpose-all-unfoldings #-}
+ 
+ module Cardano.Ledger.Babbage (
+   Babbage,
+diff --git a/src/Cardano/Ledger/Babbage/Era.hs b/src/Cardano/Ledger/Babbage/Era.hs
+index e8e3d61..8c1d6a5 100644
+--- a/src/Cardano/Ledger/Babbage/Era.hs
++++ b/src/Cardano/Ledger/Babbage/Era.hs
+@@ -33,6 +33,7 @@ import Cardano.Ledger.Shelley.Rules (
+ data BabbageEra c
+ 
+ instance Crypto c => Era (BabbageEra c) where
++  {-# SPECIALIZE instance Era (BabbageEra StandardCrypto) #-}
+   type PreviousEra (BabbageEra c) = AlonzoEra c
+   type EraCrypto (BabbageEra c) = c
+   type ProtVerLow (BabbageEra c) = 7
+diff --git a/src/Cardano/Ledger/Babbage/PParams.hs b/src/Cardano/Ledger/Babbage/PParams.hs
+index 8c50e80..5cabd40 100644
+--- a/src/Cardano/Ledger/Babbage/PParams.hs
++++ b/src/Cardano/Ledger/Babbage/PParams.hs
+@@ -92,7 +92,7 @@ import Cardano.Ledger.Binary.Coders (
+  )
+ import Cardano.Ledger.Coin (Coin (..))
+ import Cardano.Ledger.Core (EraPParams (..))
+-import Cardano.Ledger.Crypto (Crypto)
++import Cardano.Ledger.Crypto (Crypto, StandardCrypto)
+ import Cardano.Ledger.HKD (HKD, HKDFunctor (..))
+ import Cardano.Ledger.Orphans ()
+ import Cardano.Ledger.Shelley.PParams (emptyPPPUpdates, shelleyCommonPParamsHKDPairsV8)
+@@ -211,6 +211,8 @@ data DowngradeBabbagePParams f = DowngradeBabbagePParams
+   }
+ 
+ instance Crypto c => EraPParams (BabbageEra c) where
++  {-# SPECIALIZE instance EraPParams (BabbageEra StandardCrypto) #-}
++
+   type PParamsHKD f (BabbageEra c) = BabbagePParams f (BabbageEra c)
+   type UpgradePParams f (BabbageEra c) = ()
+   type DowngradePParams f (BabbageEra c) = DowngradeBabbagePParams f
+@@ -242,6 +244,8 @@ instance Crypto c => EraPParams (BabbageEra c) where
+   hkdMinUTxOValueL = notSupportedInThisEraL
+ 
+ instance Crypto c => AlonzoEraPParams (BabbageEra c) where
++  {-# SPECIALIZE instance AlonzoEraPParams (BabbageEra StandardCrypto) #-}
++
+   hkdCoinsPerUTxOWordL = notSupportedInThisEraL
+   hkdCostModelsL = lens bppCostModels $ \pp x -> pp {bppCostModels = x}
+   hkdPricesL = lens bppPrices $ \pp x -> pp {bppPrices = x}
+@@ -260,9 +264,11 @@ instance Crypto c => AlonzoEraPParams (BabbageEra c) where
+     lens bppMaxCollateralInputs $ \pp x -> pp {bppMaxCollateralInputs = x}
+ 
+ instance Crypto c => BabbageEraPParams (BabbageEra c) where
++  {-# SPECIALISE instance BabbageEraPParams (BabbageEra StandardCrypto) #-}
+   hkdCoinsPerUTxOByteL = lens bppCoinsPerUTxOByte (\pp x -> pp {bppCoinsPerUTxOByte = x})
+ 
+ instance Crypto c => EraGov (BabbageEra c) where
++  {-# SPECIALISE instance EraGov (BabbageEra StandardCrypto) #-}
+   type GovState (BabbageEra c) = ShelleyGovState (BabbageEra c)
+   emptyGovState =
+     ShelleyGovState
+diff --git a/src/Cardano/Ledger/Babbage/Rules/Utxo.hs b/src/Cardano/Ledger/Babbage/Rules/Utxo.hs
+index 57230d8..03b2ba2 100644
+--- a/src/Cardano/Ledger/Babbage/Rules/Utxo.hs
++++ b/src/Cardano/Ledger/Babbage/Rules/Utxo.hs
+@@ -23,6 +23,9 @@ module Cardano.Ledger.Babbage.Rules.Utxo (
+   validateTotalCollateral,
+   validateCollateralEqBalance,
+   validateOutputTooSmallUTxO,
++
++  utxoTransition_babbage,
++  feesOK_babbage
+ ) where
+ 
+ import Cardano.Ledger.Allegra.Rules (AllegraUtxoPredFailure)
+@@ -47,7 +50,7 @@ import Cardano.Ledger.Alonzo.Tx (AlonzoTx (..))
+ import Cardano.Ledger.Alonzo.TxWits (nullRedeemers)
+ import Cardano.Ledger.Babbage.Collateral (collAdaBalance)
+ import Cardano.Ledger.Babbage.Core
+-import Cardano.Ledger.Babbage.Era (BabbageUTXO)
++import Cardano.Ledger.Babbage.Era (BabbageEra, BabbageUTXO)
+ import Cardano.Ledger.Babbage.Rules.Utxos (BabbageUTXOS)
+ import Cardano.Ledger.BaseTypes (
+   ShelleyBase,
+@@ -58,6 +61,7 @@ import Cardano.Ledger.BaseTypes (
+ import Cardano.Ledger.Binary (DecCBOR (..), EncCBOR (..), Sized (..))
+ import Cardano.Ledger.Binary.Coders
+ import Cardano.Ledger.Coin (Coin (..))
++import Cardano.Ledger.Crypto (StandardCrypto)
+ import Cardano.Ledger.Rules.ValidationMode (
+   Inject (..),
+   Test,
+@@ -95,6 +99,12 @@ import Lens.Micro
+ import NoThunks.Class (InspectHeapNamed (..), NoThunks (..))
+ import Validation (Validation, failureIf, failureUnless)
+ 
++-- import Data.Type.Ord ()
++import GHC.TypeLits
++import Cardano.Ledger.Babbage.UTxO ()
++import Cardano.Ledger.Alonzo()
++import Cardano.Ledger.Babbage.TxInfo()
++import Cardano.Ledger.Binary.Version()
+ -- ======================================================
+ 
+ -- | Predicate failure for the Babbage Era
+@@ -153,6 +163,13 @@ instance
+ 
+ -- =======================================================
+ 
++feesOK_babbage ::
++  PParams (BabbageEra StandardCrypto) ->
++  Tx (BabbageEra StandardCrypto) ->
++  UTxO (BabbageEra StandardCrypto) ->
++  Test (BabbageUtxoPredFailure (BabbageEra StandardCrypto))
++feesOK_babbage pp tx utxo = feesOK pp tx utxo
++
+ -- | feesOK is a predicate with several parts. Some parts only apply in special circumstances.
+ --   1) The fee paid is >= the minimum fee
+ --   2) If the total ExUnits are 0 in both Memory and Steps, no further part needs to be checked.
+@@ -297,7 +314,11 @@ validateOutputTooSmallUTxO pp outs =
+         )
+         outs'
+ 
++utxoTransition_babbage :: TransitionRule (BabbageUTXO (BabbageEra StandardCrypto))
++utxoTransition_babbage = utxoTransition
++
+ -- | The UTxO transition rule for the Babbage eras.
++{- NO SPECIALIZE utxoTransition :: TransitionRule (BabbageEra StandardCrypto) -}
+ utxoTransition ::
+   forall era.
+   ( EraUTxO era
+@@ -400,6 +421,7 @@ instance
+   ) =>
+   STS (BabbageUTXO era)
+   where
++  {-# SPECIALIZE instance STS (BabbageUTXO (BabbageEra StandardCrypto)) #-}
+   type State (BabbageUTXO era) = UTxOState era
+   type Signal (BabbageUTXO era) = AlonzoTx era
+   type Environment (BabbageUTXO era) = UtxoEnv era
+@@ -409,6 +431,7 @@ instance
+ 
+   initialRules = []
+   transitionRules = [utxoTransition]
++-- yeah this sux
+ 
+ instance
+   ( Era era
+@@ -418,6 +441,7 @@ instance
+   ) =>
+   Embed (BabbageUTXOS era) (BabbageUTXO era)
+   where
++  {-# SPECIALIZE instance Embed (BabbageUTXOS (BabbageEra StandardCrypto)) (BabbageUTXO (BabbageEra StandardCrypto)) #-}
+   wrapFailed = AlonzoInBabbageUtxoPredFailure . UtxosFailure
+   wrapEvent = UtxosEvent
+ 
+@@ -435,6 +459,7 @@ instance
+   ) =>
+   EncCBOR (BabbageUtxoPredFailure era)
+   where
++  {-# SPECIALIZE instance EncCBOR (BabbageUtxoPredFailure (BabbageEra StandardCrypto)) #-}
+   encCBOR =
+     encode . \case
+       AlonzoInBabbageUtxoPredFailure x -> Sum AlonzoInBabbageUtxoPredFailure 1 !> To x
+@@ -452,6 +477,7 @@ instance
+   ) =>
+   DecCBOR (BabbageUtxoPredFailure era)
+   where
++  {-# SPECIALIZE instance DecCBOR (BabbageUtxoPredFailure (BabbageEra StandardCrypto)) #-}
+   decCBOR = decode $ Summands "BabbageUtxoPred" $ \case
+     1 -> SumD AlonzoInBabbageUtxoPredFailure <! From
+     2 -> SumD IncorrectTotalCollateralField <! From <! From
+diff --git a/src/Cardano/Ledger/Babbage/Rules/Utxos.hs b/src/Cardano/Ledger/Babbage/Rules/Utxos.hs
+index 7983fa1..de989a4 100644
+--- a/src/Cardano/Ledger/Babbage/Rules/Utxos.hs
++++ b/src/Cardano/Ledger/Babbage/Rules/Utxos.hs
+@@ -9,6 +9,7 @@
+ {-# LANGUAGE TypeFamilies #-}
+ {-# LANGUAGE TypeOperators #-}
+ {-# LANGUAGE UndecidableInstances #-}
++{-# LANGUAGE FlexibleInstances #-}
+ {-# OPTIONS_GHC -Wno-orphans #-}
+ 
+ module Cardano.Ledger.Babbage.Rules.Utxos (
+@@ -16,6 +17,8 @@ module Cardano.Ledger.Babbage.Rules.Utxos (
+   utxosTransition,
+   expectScriptsToPass,
+   babbageEvalScriptsTxInvalid,
++
++  utxosTransition_babbage
+ ) where
+ 
+ import Cardano.Ledger.Alonzo.Plutus.Context (EraPlutusContext)
+@@ -43,7 +46,8 @@ import Cardano.Ledger.Babbage.Collateral (
+   collOuts,
+  )
+ import Cardano.Ledger.Babbage.Core
+-import Cardano.Ledger.Babbage.Era (BabbageUTXOS)
++import Cardano.Ledger.Babbage.Era (BabbageUTXOS, BabbageEra)
++import Cardano.Ledger.Crypto (StandardCrypto)
+ import Cardano.Ledger.Babbage.Tx
+ import Cardano.Ledger.BaseTypes (
+   ShelleyBase,
+@@ -80,10 +84,17 @@ import Data.MapExtras (extractKeys)
+ import Debug.Trace (traceEvent)
+ import Lens.Micro
+ 
++import GHC.TypeLits
++import Cardano.Ledger.Babbage.UTxO ()
++import Cardano.Ledger.Alonzo()
++import Cardano.Ledger.Babbage.TxInfo()
++import Cardano.Ledger.Binary.Version()
++
+ -- =====================================================
+ 
+ instance
+-  ( AlonzoEraTx era
++  ( era ~ BabbageEra StandardCrypto
++  , AlonzoEraTx era
+   , AlonzoEraPParams era
+   , ShelleyEraTxBody era
+   , BabbageEraTxBody era
+@@ -103,13 +114,15 @@ instance
+   ) =>
+   STS (BabbageUTXOS era)
+   where
++  {-# SPECIALISE instance STS (BabbageUTXOS (BabbageEra StandardCrypto)) #-}
+   type BaseM (BabbageUTXOS era) = ShelleyBase
+   type Environment (BabbageUTXOS era) = UtxoEnv era
+   type State (BabbageUTXOS era) = UTxOState era
+   type Signal (BabbageUTXOS era) = AlonzoTx era
+   type PredicateFailure (BabbageUTXOS era) = AlonzoUtxosPredFailure era
+   type Event (BabbageUTXOS era) = AlonzoUtxosEvent era
+-  transitionRules = [utxosTransition]
++  transitionRules = [utxosTransition_babbage]
++
+ 
+ instance
+   ( Era era
+@@ -122,9 +135,13 @@ instance
+   wrapFailed = UpdateFailure
+   wrapEvent = AlonzoPpupToUtxosEvent
+ 
++utxosTransition_babbage :: TransitionRule (BabbageUTXOS (BabbageEra StandardCrypto))
++utxosTransition_babbage = utxosTransition
++
+ utxosTransition ::
+   forall era.
+-  ( AlonzoEraTx era
++  ( era ~ BabbageEra StandardCrypto
++  , AlonzoEraTx era
+   , ShelleyEraTxBody era
+   , BabbageEraTxBody era
+   , AlonzoEraUTxO era
+diff --git a/src/Cardano/Ledger/Babbage/Tx.hs b/src/Cardano/Ledger/Babbage/Tx.hs
+index ba2c6ad..11b5078 100644
+--- a/src/Cardano/Ledger/Babbage/Tx.hs
++++ b/src/Cardano/Ledger/Babbage/Tx.hs
+@@ -69,6 +69,7 @@ instance Crypto c => AlonzoEraTx (BabbageEra c) where
+   {-# INLINE isValidTxL #-}
+ 
+ instance Crypto c => EraSegWits (BabbageEra c) where
++  {-# SPECIALIZE instance EraSegWits (BabbageEra StandardCrypto) #-}
+   type TxSeq (BabbageEra c) = AlonzoTxSeq (BabbageEra c)
+   fromTxSeq = txSeqTxns
+   toTxSeq = AlonzoTxSeq
+diff --git a/src/Cardano/Ledger/Babbage/TxBody.hs b/src/Cardano/Ledger/Babbage/TxBody.hs
+index a3add56..8033de9 100644
+--- a/src/Cardano/Ledger/Babbage/TxBody.hs
++++ b/src/Cardano/Ledger/Babbage/TxBody.hs
+@@ -413,6 +413,7 @@ instance Crypto c => EraTxBody (BabbageEra c) where
+   type TxBodyUpgradeError (BabbageEra c) = BabbageTxBodyUpgradeError
+ 
+   mkBasicTxBody = mkMemoized basicBabbageTxBodyRaw
++  {-# INLINE mkBasicTxBody #-}
+ 
+   inputsTxBodyL = inputsBabbageTxBodyL
+   {-# INLINE inputsTxBodyL #-}
+@@ -440,6 +441,7 @@ instance Crypto c => EraTxBody (BabbageEra c) where
+ 
+   getGenesisKeyHashCountTxBody = getShelleyGenesisKeyHashCountTxBody
+ 
++  {-# INLINE upgradeTxBody #-}
+   upgradeTxBody txBody = do
+     certs <-
+       traverse
+diff --git a/src/Cardano/Ledger/Babbage/TxOut.hs b/src/Cardano/Ledger/Babbage/TxOut.hs
+index 03f8c1e..65fe681 100644
+--- a/src/Cardano/Ledger/Babbage/TxOut.hs
++++ b/src/Cardano/Ledger/Babbage/TxOut.hs
+@@ -159,8 +159,10 @@ instance Crypto c => EraTxOut (BabbageEra c) where
+ 
+   type TxOut (BabbageEra c) = BabbageTxOut (BabbageEra c)
+ 
++  {-# INLINE mkBasicTxOut #-}
+   mkBasicTxOut addr vl = BabbageTxOut addr vl NoDatum SNothing
+ 
++  {-# INLINE upgradeTxOut #-}
+   upgradeTxOut (AlonzoTxOut addr value mDatumHash) = BabbageTxOut addr value datum SNothing
+     where
+       datum = case mDatumHash of
+@@ -174,6 +176,7 @@ instance Crypto c => EraTxOut (BabbageEra c) where
+   {-# INLINE valueEitherTxOutL #-}
+ 
+   getMinCoinSizedTxOut = babbageMinUTxOValue
++  {-# INLINE getMinCoinSizedTxOut #-}
+ 
+ dataHashBabbageTxOutL ::
+   EraTxOut era => Lens' (BabbageTxOut era) (StrictMaybe (DataHash (EraCrypto era)))
+@@ -219,13 +222,13 @@ referenceScriptBabbageTxOutL =
+ instance Crypto c => BabbageEraTxOut (BabbageEra c) where
+   {-# SPECIALIZE instance BabbageEraTxOut (BabbageEra StandardCrypto) #-}
+   dataTxOutL = dataBabbageTxOutL
+-  {-# INLINEABLE dataTxOutL #-}
++  {-# INLINE dataTxOutL #-}
+ 
+   datumTxOutL = datumBabbageTxOutL
+-  {-# INLINEABLE datumTxOutL #-}
++  {-# INLINE datumTxOutL #-}
+ 
+   referenceScriptTxOutL = referenceScriptBabbageTxOutL
+-  {-# INLINEABLE referenceScriptTxOutL #-}
++  {-# INLINE referenceScriptTxOutL #-}
+ 
+ addrEitherBabbageTxOutL ::
+   EraTxOut era =>
+@@ -588,6 +591,7 @@ decodeTxOut decAddr = do
+       ]
+ {-# INLINE decodeTxOut #-}
+ 
++{-# SPECIALISE babbageMinUTxOValue :: PParams (BabbageEra StandardCrypto) -> Sized a -> Coin #-}
+ babbageMinUTxOValue ::
+   BabbageEraPParams era =>
+   PParams era ->

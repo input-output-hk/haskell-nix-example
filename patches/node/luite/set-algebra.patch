@@ -1,0 +1,10 @@
+--- a/src/Control/Iterate/SetAlgebra.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Control/Iterate/SetAlgebra.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -178,6 +178,7 @@
+ -- (dom x) ⊆ (dom y)
+ -- ===============================================================================================
+
++{-# INLINABLE compute #-}
+ compute :: Exp t -> t
+ compute (Base _rep relation) = relation
+ compute (Dom (Base SetR rel)) = rel

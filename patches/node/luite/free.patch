@@ -1,0 +1,17 @@
+--- a/src/Control/Monad/Free/Class.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Control/Monad/Free/Class.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -149,6 +149,7 @@
+ #endif
+
+ -- | A version of lift that can be used with just a Functor for f.
++{-# INLINE liftF #-}
+ liftF :: (Functor f, MonadFree f m) => f a -> m a
+ liftF = wrap . fmap return
+
+@@ -156,5 +157,6 @@
+ --
+ -- /Note:/ that this is the default implementation for 'wrap' for
+ -- @MonadFree f (t m)@.
++{-# INLINE wrapT #-}
+ wrapT :: (Functor f, MonadFree f m, MonadTrans t, Monad (t m)) => f (t m a) -> t m a
+ wrapT = join . lift . liftF

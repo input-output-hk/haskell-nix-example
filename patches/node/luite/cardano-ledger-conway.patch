@@ -1,0 +1,53 @@
+--- a/src/Cardano/Ledger/Conway/Genesis.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Cardano/Ledger/Conway/Genesis.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -20,7 +20,7 @@
+ import Cardano.Ledger.Conway.Era (ConwayEra)
+ import Cardano.Ledger.Conway.Governance
+ import Cardano.Ledger.Conway.PParams (UpgradeConwayPParams, toUpgradeConwayPParamsUpdatePairs)
+-import Cardano.Ledger.Crypto (Crypto)
++import Cardano.Ledger.Crypto (Crypto, StandardCrypto)
+ import Data.Aeson (
+   FromJSON (..),
+   KeyValue (..),
+@@ -43,21 +43,26 @@
+   }
+   deriving (Eq, Generic, Show)
+
+-instance Crypto c => NoThunks (ConwayGenesis c)
++instance Crypto c => NoThunks (ConwayGenesis c) where
++  {-# SPECIALIZE instance NoThunks (ConwayGenesis StandardCrypto) #-}
+
+ -- | Genesis are always encoded with the version of era they are defined in.
+ instance Crypto c => DecCBOR (ConwayGenesis c) where
++  {-# SPECIALIZE instance DecCBOR (ConwayGenesis StandardCrypto) #-}
+   decCBOR = decode $ RecD ConwayGenesis <! From <! From <! From
+
+ instance Crypto c => EncCBOR (ConwayGenesis c) where
++  {-# SPECIALIZE instance EncCBOR (ConwayGenesis StandardCrypto) #-}
+   encCBOR (ConwayGenesis pparams constitution committee) =
+     encode $ Rec (ConwayGenesis @c) !> To pparams !> To constitution !> To committee
+
+ instance Crypto c => ToJSON (ConwayGenesis c) where
++  {-# SPECIALIZE instance ToJSON (ConwayGenesis StandardCrypto) #-}
+   toJSON = object . toConwayGenesisPairs
+   toEncoding = pairs . mconcat . toConwayGenesisPairs
+
+ instance Crypto c => FromJSON (ConwayGenesis c) where
++  {-# SPECIALIZE instance FromJSON (ConwayGenesis StandardCrypto) #-}
+   parseJSON =
+     withObject "ConwayGenesis" $ \obj -> do
+       upgradeProtocolPParams <- parseJSON (Object obj)
+@@ -66,6 +71,7 @@
+         <*> obj .: "constitution"
+         <*> obj .: "committee"
+
++{-# INLINE toConwayGenesisPairs #-}
+ toConwayGenesisPairs :: (Crypto c, KeyValue e a) => ConwayGenesis c -> [a]
+ toConwayGenesisPairs cg@(ConwayGenesis _ _ _) =
+   let ConwayGenesis {..} = cg
+@@ -75,4 +81,5 @@
+         ++ toUpgradeConwayPParamsUpdatePairs cgUpgradePParams
+
+ instance Crypto c => Default (ConwayGenesis c) where
++  {-# SPECIALIZE instance Default (ConwayGenesis StandardCrypto) #-}
+   def = ConwayGenesis def def def

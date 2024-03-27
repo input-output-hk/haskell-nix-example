@@ -1,0 +1,137 @@
+--- a/src/Cardano/Ledger/Shelley/API/Mempool.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Cardano/Ledger/Shelley/API/Mempool.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -84,6 +84,7 @@
+   deriving (Eq, NoThunks, Show, NFData)
+
+ -- | Extract the underlying unvalidated Tx.
++{-# INLINE extractTx #-}
+ extractTx :: Validated tx -> tx
+ extractTx (Validated tx) = tx
+
+--- a/src/Cardano/Ledger/Shelley/Genesis.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Cardano/Ledger/Shelley/Genesis.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -72,7 +72,7 @@
+  )
+ import Cardano.Ledger.Coin (Coin)
+ import Cardano.Ledger.Core
+-import Cardano.Ledger.Crypto (Crypto, HASH, KES)
++import Cardano.Ledger.Crypto (Crypto, StandardCrypto, HASH, KES)
+ import Cardano.Ledger.Keys
+ import Cardano.Ledger.SafeHash (unsafeMakeSafeHash)
+ import Cardano.Ledger.Shelley.Era (ShelleyEra)
+@@ -221,22 +221,27 @@
+   }
+   deriving stock (Generic)
+
+-deriving instance Crypto c => Show (ShelleyGenesis c)
++deriving instance Crypto c => Show (ShelleyGenesis c) {-where
++  {-# SPECIALIZE instance Show (ShelleyGenesis StandardCrypto) #-} -}
+
+-deriving instance Crypto c => Eq (ShelleyGenesis c)
++deriving instance Crypto c => Eq (ShelleyGenesis c) {-where
++  {-# SPECIALIZE instance Eq (ShelleyGenesis StandardCrypto) #-} -}
+
+ deriving via
+   AllowThunksIn '["sgInitialFunds", "sgStaking"] (ShelleyGenesis c)
+   instance
+     Crypto c => NoThunks (ShelleyGenesis c)
+
++{-# INLINE sgActiveSlotCoeff #-}
+ sgActiveSlotCoeff :: ShelleyGenesis c -> ActiveSlotCoeff
+ sgActiveSlotCoeff = mkActiveSlotCoeff . sgActiveSlotsCoeff
+
+ instance Crypto c => ToJSON (ShelleyGenesis c) where
++  {-# SPECIALIZE instance ToJSON (ShelleyGenesis StandardCrypto) #-}
+   toJSON = Aeson.object . toShelleyGenesisPairs
+   toEncoding = Aeson.pairs . mconcat . toShelleyGenesisPairs
+
++{-# SPECIALIZE toShelleyGenesisPairs :: Aeson.KeyValue e a => ShelleyGenesis StandardCrypto -> [a] #-}
+ toShelleyGenesisPairs :: (Aeson.KeyValue e a, Crypto c) => ShelleyGenesis c -> [a]
+ toShelleyGenesisPairs
+   ShelleyGenesis
+@@ -276,6 +281,7 @@
+         ]
+
+ instance Crypto c => FromJSON (ShelleyGenesis c) where
++  {-# SPECIALIZE instance FromJSON (ShelleyGenesis StandardCrypto) #-}
+   parseJSON =
+     Aeson.withObject "ShelleyGenesis" $ \obj ->
+       ShelleyGenesis
+@@ -301,9 +307,11 @@
+          in UTCTime day time
+
+ instance Crypto c => ToJSON (ShelleyGenesisStaking c) where
++  {-# SPECIALIZE instance ToJSON (ShelleyGenesisStaking StandardCrypto) #-}
+   toJSON = Aeson.object . toShelleyGenesisStakingPairs
+   toEncoding = Aeson.pairs . mconcat . toShelleyGenesisStakingPairs
+
++{-# SPECIALIZE toShelleyGenesisStakingPairs :: Aeson.KeyValue e a => ShelleyGenesisStaking StandardCrypto -> [a] #-}
+ toShelleyGenesisStakingPairs ::
+   (Aeson.KeyValue e a, Crypto c) =>
+   ShelleyGenesisStaking c ->
+@@ -314,6 +322,7 @@
+   ]
+
+ instance Crypto c => FromJSON (ShelleyGenesisStaking c) where
++  {-# SPECIALIZE instance FromJSON (ShelleyGenesisStaking StandardCrypto) #-}
+   parseJSON =
+     Aeson.withObject "ShelleyGenesisStaking" $ \obj ->
+       ShelleyGenesisStaking
+@@ -321,11 +330,14 @@
+         <*> (forceElemsToWHNF <$> obj .: "stake")
+
+ -- | Genesis are always encoded with the version of era they are defined in.
+-instance Crypto c => DecCBOR (ShelleyGenesis c)
++instance Crypto c => DecCBOR (ShelleyGenesis c) where
++  {-# SPECIALIZE instance DecCBOR (ShelleyGenesis StandardCrypto) #-}
+
+-instance Crypto c => EncCBOR (ShelleyGenesis c)
++instance Crypto c => EncCBOR (ShelleyGenesis c) where
++  {-# SPECIALIZE instance EncCBOR (ShelleyGenesis StandardCrypto) #-}
+
+ instance Crypto c => ToCBOR (ShelleyGenesis c) where
++  {-# SPECIALIZE instance ToCBOR (ShelleyGenesis StandardCrypto) #-}
+   toCBOR
+     ShelleyGenesis
+       { sgSystemStart
+@@ -363,6 +375,7 @@
+           <> encCBOR sgStaking
+
+ instance Crypto c => FromCBOR (ShelleyGenesis c) where
++  {-# SPECIALIZE instance FromCBOR (ShelleyGenesis StandardCrypto) #-}
+   fromCBOR = toPlainDecoder shelleyProtVer $ do
+     decodeRecordNamed "ShelleyGenesis" (const 15) $ do
+       sgSystemStart <- decCBOR
+@@ -418,6 +431,7 @@
+   Genesis UTxO
+ -------------------------------------------------------------------------------}
+
++{-# SPECIALIZE genesisUTxO :: forall era. (EraCrypto era ~ StandardCrypto, EraTxOut era) => ShelleyGenesis StandardCrypto -> UTxO era #-}
+ genesisUTxO ::
+   forall era.
+   EraTxOut era =>
+@@ -441,6 +455,8 @@
+ -- This gets turned into a UTxO by making a pseudo-transaction for each address,
+ -- with the 0th output being the coin value. So to spend from the initial UTxO
+ -- we need this same 'TxIn' to use as an input to the spending transaction.
++
++{-# SPECIALIZE initialFundsPseudoTxIn :: Addr StandardCrypto -> TxIn StandardCrypto #-}
+ initialFundsPseudoTxIn :: forall c. Crypto c => Addr c -> TxIn c
+ initialFundsPseudoTxIn addr =
+   TxIn (pseudoTxId addr) minBound
+@@ -499,6 +515,7 @@
+     ]
+
+ -- | Do some basic sanity checking on the Shelley genesis file.
++{-# SPECIALIZE validateGenesis :: ShelleyGenesis StandardCrypto -> Either [ValidationErr] () #-}
+ validateGenesis ::
+   forall c.
+   Crypto c =>
+@@ -557,6 +574,7 @@
+   Construct 'Globals' using 'ShelleyGenesis'
+ -------------------------------------------------------------------------------}
+
++{-# SPECIALIZE mkShelleyGlobals :: ShelleyGenesis StandardCrypto -> EpochInfo (Either Text) -> Version -> Globals #-}
+ mkShelleyGlobals ::
+   ShelleyGenesis c ->
+   EpochInfo (Either Text) ->

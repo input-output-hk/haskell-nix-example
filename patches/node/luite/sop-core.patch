@@ -1,0 +1,19 @@
+--- a/src/Data/SOP/NP.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Data/SOP/NP.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -256,6 +256,7 @@
+ cpure_NP p f = case sList :: SList xs of
+   SNil   -> Nil
+   SCons  -> f :* cpure_NP p f
++{-# INLINE cpure_NP #-}
+
+ -- | Specialization of 'hcpure'.
+ --
+--- a/src/Data/SOP/Sing.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Data/SOP/Sing.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -83,6 +83,7 @@
+ --
+ sList :: SListI xs => SList xs
+ sList = ccase_SList (Proxy :: Proxy Top) SNil SCons
++{-# INLINABLE sList #-}
+
+ -- * Shape of type-level lists

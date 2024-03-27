@@ -1,0 +1,93 @@
+--- a/src/Cardano/Ledger/Mary/Value.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Cardano/Ledger/Mary/Value.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -59,7 +59,7 @@
+ import Cardano.Ledger.Binary.Version (natVersion)
+ import Cardano.Ledger.Coin (Coin (..), integerToWord64)
+ import Cardano.Ledger.Compactible (Compactible (..))
+-import Cardano.Ledger.Crypto (Crypto (ADDRHASH))
++import Cardano.Ledger.Crypto (Crypto (ADDRHASH), StandardCrypto)
+ import Cardano.Ledger.Shelley.Scripts (ScriptHash (..))
+ import Cardano.Ledger.TreeDiff (Expr (App), ToExpr (..))
+ import Cardano.Ledger.Val (Val (..))
+@@ -157,6 +157,7 @@
+   deriving (Show, Generic, ToJSON, EncCBOR)
+
+ instance Crypto c => Eq (MultiAsset c) where
++  {-# SPECIALISE instance Eq (MultiAsset StandardCrypto) #-}
+   MultiAsset x == MultiAsset y = pointWise (pointWise (==)) x y
+
+ instance NFData (MultiAsset cypto) where
+@@ -176,6 +177,7 @@
+     MultiAsset (canonicalMap (canonicalMap ((-1 :: Integer) *)) m)
+
+ instance Crypto c => DecCBOR (MultiAsset c) where
++  {-# SPECIALISE instance DecCBOR (MultiAsset StandardCrypto) #-}
+   decCBOR = decodeMultiAsset decodeIntegerBounded64
+
+ -- | The Value representing MultiAssets
+@@ -183,6 +185,8 @@
+   deriving (Show, Generic)
+
+ instance Crypto c => Eq (MaryValue c) where
++  {-# SPECIALIZE instance Eq (MaryValue StandardCrypto) #-}
++  {-# INLINE (==) #-}
+   x == y = pointwise (==) x y
+
+ instance NFData (MaryValue c) where
+@@ -209,6 +213,7 @@
+ -- Make the Val instance of MaryValue
+
+ instance Crypto c => Val (MaryValue c) where
++  {-# SPECIALIZE instance Val (MaryValue StandardCrypto) #-}
+   s <×> MaryValue c (MultiAsset m) =
+     MaryValue
+       (s <×> c)
+@@ -282,6 +287,7 @@
+ -- ==============================================================
+ -- CBOR
+
++{-# SPECIALISE decodeMaryValue :: forall s. Decoder s (MaryValue StandardCrypto) #-}
+ decodeMaryValue ::
+   forall c s.
+   Crypto c =>
+@@ -296,6 +302,7 @@
+     TypeListLenIndef -> decodeValuePair (toInteger <$> decodeWord64)
+     _ -> fail $ "MaryValue: expected array or int, got " ++ show tt
+
++-- XXX specialise
+ decodeValuePair ::
+   Crypto c =>
+   (forall t. Decoder t Integer) ->
+@@ -426,6 +433,8 @@
+   rnf = rwhnf
+
+ instance Crypto c => Eq (CompactValue c) where
++  {-# SPECIALISE instance Eq (CompactValue StandardCrypto) #-}
++  {-# INLINE (==) #-}
+   a == b = from a == from b
+
+ instance ToExpr (CompactValue c)
+@@ -540,6 +549,7 @@
+      into region E.
+  -}
+
++{-# SPECIALISE to :: MaryValue StandardCrypto -> Maybe (CompactValue StandardCrypto) #-}
+ to ::
+   forall c.
+   Crypto c =>
+@@ -676,6 +686,7 @@
+ isMultiAssetSmallEnough (MultiAsset ma) =
+   44 * M.getSum (foldMap' (M.Sum . length) ma) + 28 * length ma <= 65535
+
++{-# SPECIALISE representationSize :: [(PolicyID StandardCrypto, AssetName, Integer)] -> Int #-}
+ representationSize ::
+   forall c.
+   Crypto c =>
+@@ -694,6 +705,7 @@
+     anameBlockSize =
+       Semigroup.getSum $ foldMap' (Semigroup.Sum . SBS.length . assetName) assetNames
+
++{-# SPECIALISE from :: CompactValue StandardCrypto -> MaryValue StandardCrypto #-}
+ from :: forall c. Crypto c => CompactValue c -> MaryValue c
+ from (CompactValueAdaOnly c) = MaryValue (fromCompact c) (MultiAsset Map.empty)
+ from (CompactValueMultiAsset c numAssets rep) =

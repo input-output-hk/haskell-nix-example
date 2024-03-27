@@ -629,7 +629,7 @@ index 3aeb0e5..bea0ac9 100644
           }
           ];
         };
-        cardanoNodePkg = pkgs: pkgs.haskell-nix.project' {
+        cardanoNodePkg = luites-patches: pkgs: pkgs.haskell-nix.project' {
           compiler-nix-name = "ghc964";
           src = inputs.cardano-node;
 
@@ -648,7 +648,21 @@ index 3aeb0e5..bea0ac9 100644
             packages.cardano-config.flags.systemd = false;
             packages.cardano-node.flags.systemd = false;
           })
-
+          ({ lib, ... }:
+            lib.mkIf luites-patches { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
+            "cardano-ledger-allegra"
+            "cardano-ledger-alonzo"
+            "cardano-ledger-babbage"
+            "cardano-ledger-conway"
+            "cardano-ledger-core"
+            "cardano-ledger-mary"
+            "cardano-ledger-shelley"
+            "free"
+            "ouroboros-consensus-cardano"
+            "set-algebra"
+            "small-steps"
+            "sop-core"
+          ])); })
           # Fix compilation with newer ghc versions
           ({ lib, config, ... }:
             lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
@@ -843,7 +857,7 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         cardanoNodePackages.packages =
-          let node = pkgs: map (exe: (cardanoNodePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+          let node = pkgs: map (exe: (cardanoNodePkg false pkgs).hsPkgs.${exe}.components.exes.${exe}) [
                 "cardano-node" "cardano-submit-api"
                 # cardano-cli comes from CHaP, otherwise we'd have to pull it from the cardano-cli repo.
                 "cardano-cli"
@@ -864,6 +878,30 @@ index 3aeb0e5..bea0ac9 100644
             cardano-tools-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
             cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
+        cardanoNodePackagesPatched.packages =
+          {}
+          # let node = pkgs: map (exe: (cardanoNodePkg true pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+          #       "cardano-node" "cardano-submit-api"
+          #       # cardano-cli comes from CHaP, otherwise we'd have to pull it from the cardano-cli repo.
+          #       "cardano-cli"
+          #     ];
+          #     pkg = comps: pkgs.packaging.asZip {
+          #       name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
+          #         comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
+          #         comp.passthru.identifier.name      # pkg name, e.g. cabal-install
+          #         comp.version                       # component version, e.g. 3.10.3.0
+          #         comp.src.origSrc.shortRev          # source rev, e.g. 256f85d
+          #       ];
+          #     } comps;
+          # in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+          #   cardano-tools-patched = pkg (node pkgs);
+          # } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          #   cardano-tools-static-patched       = pkg (node pkgs.pkgsCross.musl64);
+          #   cardano-tools-static-arm64-patched = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
+          #   cardano-tools-ucrt-patched         = pkg (node pkgs.pkgsCross.ucrt64);
+          #   cardano-tools-mingwW64-patched     = pkg (node pkgs.pkgsCross.mingwW64);
+          # }
+          ;
         cabalInstallPackages.packages =
           let cabal = pkgs: (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal;
               pkg = comps: pkgs.packaging.asZip {
@@ -1042,7 +1080,7 @@ index 3aeb0e5..bea0ac9 100644
       in addHydraJobs (
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
-          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages nixToolsPackages nixToolsPackagesNoIfd mithrilPackages cabalInstallPackages ]
+          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages cardanoNodePackagesPatched nixToolsPackages nixToolsPackagesNoIfd mithrilPackages cabalInstallPackages ]
       )
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; });
           lib.recursiveUpdate flake {

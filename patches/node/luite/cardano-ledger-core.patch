@@ -1,0 +1,122 @@
+--- a/src/Cardano/Ledger/Address.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Cardano/Ledger/Address.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -85,7 +85,7 @@
+   StakeReference (..),
+   normalizePtr,
+  )
+-import Cardano.Ledger.Crypto (Crypto)
++import Cardano.Ledger.Crypto (Crypto, StandardCrypto)
+ import Cardano.Ledger.Hashes (ScriptHash (..))
+ import Cardano.Ledger.Keys (KeyHash (..), KeyRole (..))
+ import Cardano.Ledger.TreeDiff (ToExpr (toExpr), defaultExprViaShow)
+@@ -224,17 +224,20 @@
+   toJSONKey = Aeson.ToJSONKeyText (Aeson.fromText . addrToText) (Aeson.text . addrToText)
+
+ instance Crypto c => FromJSONKey (Addr c) where
++  {-# SPECIALISE instance FromJSONKey (Addr StandardCrypto) #-}
+   fromJSONKey = Aeson.FromJSONKeyTextParser parseAddr
+
+ instance ToJSON (Addr c) where
+   toJSON = toJSON . addrToText
+
+ instance Crypto c => FromJSON (Addr c) where
++  {-# SPECIALISE instance FromJSON (Addr StandardCrypto) #-}
+   parseJSON = Aeson.withText "address" parseAddr
+
+ addrToText :: Addr c -> Text
+ addrToText = Text.decodeLatin1 . B16.encode . serialiseAddr
+
++{-# SPECIALISE parseAddr :: Text -> Aeson.Parser (Addr StandardCrypto) #-}
+ parseAddr :: Crypto c => Text -> Aeson.Parser (Addr c)
+ parseAddr t = do
+   bytes <- either badHex return (B16.decode (Text.encodeUtf8 t))
+@@ -375,6 +378,7 @@
+
+ instance NoThunks (BootstrapAddress c)
+
++{-# SPECIALISE bootstrapKeyHash :: BootstrapAddress StandardCrypto -> KeyHash 'Payment StandardCrypto #-}
+ bootstrapKeyHash ::
+   forall c.
+   Crypto c =>
+@@ -419,6 +423,7 @@
+ compactAddr = UnsafeCompactAddr . SBS.toShort . serialiseAddr
+ {-# INLINE compactAddr #-}
+
++{-# SPECIALISE decompactAddr :: HasCallStack => CompactAddr StandardCrypto -> Addr StandardCrypto #-}
+ decompactAddr :: forall c. (HasCallStack, Crypto c) => CompactAddr c -> Addr c
+ decompactAddr (UnsafeCompactAddr sbs) =
+   case runFail $ evalStateT (decodeAddrStateAllowLeftoverT True sbs) 0 of
+--- a/src/Cardano/Ledger/Core/Translation.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Cardano/Ledger/Core/Translation.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -83,6 +83,7 @@
+   -- The translation is a given the translation context of @era@.
+   --
+   -- A default instance is provided for when the two types are 'Coercible'.
++  {-# INLINE translateEra #-}
+   translateEra :: TranslationContext era -> f (PreviousEra era) -> Except (TranslationError era f) (f era)
+   default translateEra ::
+     (Coercible (f (PreviousEra era)) (f era), TranslationContext era ~ ()) =>
+@@ -93,6 +94,7 @@
+
+ -- | Variant of 'translateEra' for when 'TranslationError' is 'Void' and the
+ -- translation thus cannot fail.
++{-# INLINE translateEra' #-}
+ translateEra' ::
+   (TranslateEra era f, TranslationError era f ~ Void) =>
+   TranslationContext era ->
+@@ -102,6 +104,7 @@
+
+ -- | Variant of 'translateEra' for when 'TranslationError' is '()', converting
+ -- the result to a 'Maybe'.
++{-# INLINE translateEraMaybe #-}
+ translateEraMaybe ::
+   (TranslateEra era f, TranslationError era f ~ ()) =>
+   TranslationContext era ->
+@@ -111,6 +114,7 @@
+   either (const Nothing) Just . runExcept . translateEra ctxt
+
+ -- | Translate a type through its binary representation from previous era to the current one.
++{-# INLINE translateEraThroughCBOR #-}
+ translateEraThroughCBOR ::
+   forall era ti to.
+   (Era era, ToCBOR (ti (PreviousEra era)), DecCBOR (Annotator (to era))) =>
+--- a/src/Cardano/Ledger/UMap.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/src/Cardano/Ledger/UMap.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -605,6 +605,7 @@
+
+ -- | All `View`s are `Foldable`
+ instance Foldable (UView c k) where
++  {-# INLINE foldMap #-}
+   foldMap f = \case
+     RewDepUView UMap {umElems} -> Map.foldlWithKey accum mempty umElems
+       where
+@@ -621,6 +622,7 @@
+         accum ans _ (UMElem _ _ _ (SJust vd)) = ans <> f vd
+         accum ans _ _ = ans
+
++  {-# INLINE foldr #-}
+   foldr accum ans0 = \case
+     RewDepUView UMap {umElems} -> Map.foldr accum' ans0 umElems
+       where
+@@ -637,6 +639,7 @@
+         accum' (UMElem _ _ _ (SJust vd)) ans = accum vd ans
+         accum' _ ans = ans
+
++  {-# INLINE foldl' #-}
+   foldl' accum ans0 = \case
+     RewDepUView UMap {umElems} -> Map.foldl' accum' ans0 umElems
+       where
+@@ -993,11 +996,13 @@
+
+ -- | A `UView` is a view, so the size of the view is NOT the same as the size of
+ -- the underlying `UMElem` map.
++{-# INLINE size #-}
+ size :: UView c k v -> Int
+ size = \case
+   PtrUView UMap {umPtrs} -> Map.size umPtrs
+   x -> foldl' (\count _v -> count + 1) 0 x
+
++
+ -- | Create a UMap from 4 separate maps. NOTE: For use in tests only.
+ unify ::
+   Map (Credential 'Staking c) RDPair ->

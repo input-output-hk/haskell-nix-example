@@ -1,0 +1,140 @@
+--- a/ouroboros-consensus-cardano/src/ouroboros-consensus-cardano/Ouroboros/Consensus/Cardano/CanHardFork.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/ouroboros-consensus-cardano/src/ouroboros-consensus-cardano/Ouroboros/Consensus/Cardano/CanHardFork.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -256,7 +256,8 @@
+ -------------------------------------------------------------------------------}
+
+ type CardanoHardForkConstraints c =
+-  ( TPraos.PraosCrypto c
++  ( c ~ StandardCrypto
++  , TPraos.PraosCrypto c
+   , Praos.PraosCrypto c
+   , TranslateProto (TPraos c) (Praos c)
+   , ShelleyCompatible (TPraos c) (ShelleyEra c)
+@@ -625,7 +626,7 @@
+ -------------------------------------------------------------------------------}
+
+ translateLedgerStateAlonzoToBabbageWrapper ::
+-     (Praos.PraosCrypto c, TPraos.PraosCrypto c)
++     (Praos.PraosCrypto c, c ~ StandardCrypto, TPraos.PraosCrypto c)
+   => RequiringBoth
+        WrapLedgerConfig
+        (Translate LedgerState)
+@@ -647,7 +648,7 @@
+         }
+
+ translateTxAlonzoToBabbageWrapper ::
+-     (Praos.PraosCrypto c)
++     (Praos.PraosCrypto c, c ~ StandardCrypto)
+   => SL.TranslationContext (BabbageEra c)
+   -> InjectTx
+        (ShelleyBlock (TPraos c) (AlonzoEra c))
+@@ -662,7 +663,7 @@
+
+ translateValidatedTxAlonzoToBabbageWrapper ::
+      forall c.
+-     (Praos.PraosCrypto c)
++     (c ~ StandardCrypto, Praos.PraosCrypto c)
+   => SL.TranslationContext (BabbageEra c)
+   -> InjectValidatedTx
+        (ShelleyBlock (TPraos c) (AlonzoEra c))
+@@ -687,7 +688,7 @@
+ -------------------------------------------------------------------------------}
+
+ translateLedgerStateBabbageToConwayWrapper ::
+-     forall c. (Praos.PraosCrypto c)
++     forall c. (c ~ StandardCrypto, Praos.PraosCrypto c)
+   => RequiringBoth
+        WrapLedgerConfig
+        (Translate LedgerState)
+--- a/ouroboros-consensus-cardano/src/shelley/Ouroboros/Consensus/Shelley/Eras.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/ouroboros-consensus-cardano/src/shelley/Ouroboros/Consensus/Shelley/Eras.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -230,7 +230,7 @@
+
+   getProposedProtocolVersion = defaultGetProposedProtocolVersion
+
+-instance (Praos.PraosCrypto c) => ShelleyBasedEra (BabbageEra c) where
++instance (Praos.PraosCrypto c, c ~ StandardCrypto) => ShelleyBasedEra (BabbageEra c) where
+   shelleyBasedEraName _ = "Babbage"
+   applyShelleyBasedTx = applyAlonzoBasedTx
+
+--- a/ouroboros-consensus-cardano/src/shelley/Ouroboros/Consensus/Shelley/HFEras.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/ouroboros-consensus-cardano/src/shelley/Ouroboros/Consensus/Shelley/HFEras.hs	2024-03-25 12:03:21.836386854 +0000
+@@ -1,6 +1,7 @@
+ {-# LANGUAGE FlexibleInstances     #-}
+ {-# LANGUAGE MultiParamTypeClasses #-}
+ {-# LANGUAGE UndecidableInstances  #-}
++{-# LANGUAGE TypeFamilies          #-}
+ {-# OPTIONS_GHC -Wno-orphans #-}
+
+ -- | Hard fork eras.
+@@ -76,11 +77,11 @@
+ -- Praos/Babbage still goes through the forecast for TPraos. Once this is
+ -- addressed, we could remove this instance.
+ instance
+-  (Praos.PraosCrypto c, TPraos.PraosCrypto c) =>
++  (c ~ StandardCrypto, Praos.PraosCrypto c, TPraos.PraosCrypto c) =>
+   ShelleyCompatible (TPraos c) (BabbageEra c)
+
+ instance
+-  (Praos.PraosCrypto c) => ShelleyCompatible (Praos c) (BabbageEra c)
++  (c ~ StandardCrypto, Praos.PraosCrypto c) => ShelleyCompatible (Praos c) (BabbageEra c)
+
+ -- This instance is required since the ledger view forecast function for
+ -- Praos/Conway still goes through the forecast for TPraos. Once this is
+--- a/ouroboros-consensus-cardano/src/shelley/Ouroboros/Consensus/Shelley/Ledger/Mempool.hs	2001-09-09 01:46:40.000000000 +0000
++++ b/ouroboros-consensus-cardano/src/shelley/Ouroboros/Consensus/Shelley/Ledger/Mempool.hs	2024-03-25 08:01:25.594767799 +0000
+@@ -127,23 +127,30 @@
+
+ instance ShelleyCompatible proto era
+       => LedgerSupportsMempool (ShelleyBlock proto era) where
++  {-# INLINE txInvariant #-}
+   txInvariant = const True
+
++  {-# INLINE applyTx #-}
+   applyTx = applyShelleyTx
+
++  {-# INLINE reapplyTx #-}
+   reapplyTx = reapplyShelleyTx
+
++  {-# INLINE txsMaxBytes #-}
+   txsMaxBytes TickedShelleyLedgerState { tickedShelleyLedgerState = shelleyState } =
+       fromIntegral maxBlockBodySize - fixedBlockBodyOverhead
+     where
+       maxBlockBodySize = getPParams shelleyState ^. ppMaxBBSizeL
+
++  {-# INLINE txInBlockSize #-}
+   txInBlockSize (ShelleyTx _ tx) = txSize + perTxOverhead
+     where
+       txSize = fromIntegral $ tx ^. sizeTxF
+
++  {-# INLINE txForgetValidated #-}
+   txForgetValidated (ShelleyValidatedTx txid vtx) = ShelleyTx txid (SL.extractTx vtx)
+
++{-# INLINE mkShelleyTx #-}
+ mkShelleyTx :: forall era proto. ShelleyBasedEra era => Tx era -> GenTx (ShelleyBlock proto era)
+ mkShelleyTx tx = ShelleyTx (SL.txid @era (tx ^. bodyTxL)) tx
+
+@@ -212,6 +219,7 @@
+   Applying transactions
+ -------------------------------------------------------------------------------}
+
++{-# INLINE applyShelleyTx #-}
+ applyShelleyTx :: forall era proto.
+      ShelleyBasedEra era
+   => LedgerConfig (ShelleyBlock proto era)
+@@ -238,6 +246,7 @@
+   where
+     innerSt = tickedShelleyLedgerState st
+
++{-# INLINE reapplyShelleyTx #-}
+ reapplyShelleyTx ::
+      ShelleyBasedEra era
+   => LedgerConfig (ShelleyBlock proto era)
+@@ -266,6 +275,7 @@
+ set lens inner outer =
+     runIdentity $ lens (\_ -> Identity inner) outer
+
++{-# INLINE theLedgerLens #-}
+ theLedgerLens ::
+      Functor f
+   => (SL.LedgerState era -> f (SL.LedgerState era))
