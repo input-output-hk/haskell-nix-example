@@ -1,0 +1,158 @@
+diff --git a/src/Cardano/Ledger/Address.hs b/src/Cardano/Ledger/Address.hs
+index 8faafc3..0ea7618 100644
+--- a/src/Cardano/Ledger/Address.hs
++++ b/src/Cardano/Ledger/Address.hs
+@@ -85,7 +85,7 @@ import Cardano.Ledger.Credential (
+   StakeReference (..),
+   normalizePtr,
+  )
+-import Cardano.Ledger.Crypto (Crypto)
++import Cardano.Ledger.Crypto (Crypto, StandardCrypto)
+ import Cardano.Ledger.Hashes (ScriptHash (..))
+ import Cardano.Ledger.Keys (KeyHash (..), KeyRole (..))
+ import Cardano.Prelude (unsafeShortByteStringIndex)
+@@ -200,9 +200,11 @@ data RewardAcnt c = RewardAcnt
+   deriving (Show, Eq, Generic, Ord, NFData, ToJSONKey, FromJSONKey)
+
+ instance Crypto c => Default (RewardAcnt c) where
++  {-# SPECIALISE instance Default (RewardAcnt StandardCrypto) #-}
+   def = RewardAcnt def def
+
+ instance Crypto c => ToJSON (RewardAcnt c) where
++  {-# SPECIALISE instance ToJSON (RewardAcnt StandardCrypto) #-}
+   toJSON ra =
+     Aeson.object
+       [ "network" .= getRwdNetwork ra
+@@ -210,6 +212,7 @@ instance Crypto c => ToJSON (RewardAcnt c) where
+       ]
+
+ instance Crypto c => FromJSON (RewardAcnt c) where
++  {-# SPECIALISE instance FromJSON (RewardAcnt StandardCrypto) #-}
+   parseJSON =
+     Aeson.withObject "RewardAcnt" $ \obj ->
+       RewardAcnt
+@@ -224,17 +227,20 @@ instance ToJSONKey (Addr c) where
+   toJSONKey = Aeson.ToJSONKeyText (Aeson.fromText . addrToText) (Aeson.text . addrToText)
+
+ instance Crypto c => FromJSONKey (Addr c) where
++  {-# SPECIALISE instance FromJSONKey (Addr StandardCrypto) #-}
+   fromJSONKey = Aeson.FromJSONKeyTextParser parseAddr
+
+ instance ToJSON (Addr c) where
+   toJSON = toJSON . addrToText
+
+ instance Crypto c => FromJSON (Addr c) where
++  {-# SPECIALISE instance FromJSON (Addr StandardCrypto) #-}
+   parseJSON = Aeson.withText "address" parseAddr
+
+ addrToText :: Addr c -> Text
+ addrToText = Text.decodeLatin1 . B16.encode . serialiseAddr
+
++{-# SPECIALISE parseAddr :: Text -> Aeson.Parser (Addr StandardCrypto) #-}
+ parseAddr :: Crypto c => Text -> Aeson.Parser (Addr c)
+ parseAddr t = do
+   bytes <- either badHex return (B16.decode (Text.encodeUtf8 t))
+@@ -375,6 +381,7 @@ newtype BootstrapAddress c = BootstrapAddress
+
+ instance NoThunks (BootstrapAddress c)
+
++{-# SPECIALISE bootstrapKeyHash :: BootstrapAddress StandardCrypto -> KeyHash 'Payment StandardCrypto #-}
+ bootstrapKeyHash ::
+   forall c.
+   Crypto c =>
+@@ -399,6 +406,7 @@ newtype CompactAddr c = UnsafeCompactAddr ShortByteString
+   deriving newtype (NoThunks, NFData)
+
+ instance Crypto c => Show (CompactAddr c) where
++  {-# SPECIALIZE instance Show (CompactAddr StandardCrypto) #-}
+   show c = show (decompactAddr c)
+
+ -- | Unwrap the compact address and get to the address' binary representation.
+@@ -410,6 +418,7 @@ compactAddr :: Addr c -> CompactAddr c
+ compactAddr = UnsafeCompactAddr . SBS.toShort . serialiseAddr
+ {-# INLINE compactAddr #-}
+
++{-# SPECIALISE decompactAddr :: HasCallStack => CompactAddr StandardCrypto -> Addr StandardCrypto #-}
+ decompactAddr :: forall c. (HasCallStack, Crypto c) => CompactAddr c -> Addr c
+ decompactAddr (UnsafeCompactAddr sbs) =
+   case runFail $ evalStateT (decodeAddrStateLenientT True True sbs) 0 of
+diff --git a/src/Cardano/Ledger/Core/Translation.hs b/src/Cardano/Ledger/Core/Translation.hs
+index 5fbd8da..9dec779 100644
+--- a/src/Cardano/Ledger/Core/Translation.hs
++++ b/src/Cardano/Ledger/Core/Translation.hs
+@@ -83,6 +83,7 @@ class (Era era, Era (PreviousEra era)) => TranslateEra era f where
+   -- The translation is a given the translation context of @era@.
+   --
+   -- A default instance is provided for when the two types are 'Coercible'.
++  {-# INLINE translateEra #-}
+   translateEra :: TranslationContext era -> f (PreviousEra era) -> Except (TranslationError era f) (f era)
+   default translateEra ::
+     (Coercible (f (PreviousEra era)) (f era), TranslationContext era ~ ()) =>
+@@ -93,6 +94,7 @@ class (Era era, Era (PreviousEra era)) => TranslateEra era f where
+
+ -- | Variant of 'translateEra' for when 'TranslationError' is 'Void' and the
+ -- translation thus cannot fail.
++{-# INLINE translateEra' #-}
+ translateEra' ::
+   (TranslateEra era f, TranslationError era f ~ Void) =>
+   TranslationContext era ->
+@@ -102,6 +104,7 @@ translateEra' ctxt = either absurd id . runExcept . translateEra ctxt
+
+ -- | Variant of 'translateEra' for when 'TranslationError' is '()', converting
+ -- the result to a 'Maybe'.
++{-# INLINE translateEraMaybe #-}
+ translateEraMaybe ::
+   (TranslateEra era f, TranslationError era f ~ ()) =>
+   TranslationContext era ->
+@@ -111,6 +114,7 @@ translateEraMaybe ctxt =
+   either (const Nothing) Just . runExcept . translateEra ctxt
+
+ -- | Translate a type through its binary representation from previous era to the current one.
++{-# INLINE translateEraThroughCBOR #-}
+ translateEraThroughCBOR ::
+   forall era ti to.
+   (Era era, ToCBOR (ti (PreviousEra era)), DecCBOR (Annotator (to era))) =>
+diff --git a/src/Cardano/Ledger/UMap.hs b/src/Cardano/Ledger/UMap.hs
+index bd55726..89f96de 100644
+--- a/src/Cardano/Ledger/UMap.hs
++++ b/src/Cardano/Ledger/UMap.hs
+@@ -603,6 +603,7 @@ domRestrictedStakeCredentials setk UMap {umElems, umPtrs} =
+
+ -- | All `View`s are `Foldable`
+ instance Foldable (UView c k) where
++  {-# INLINE foldMap #-}
+   foldMap f = \case
+     RewDepUView UMap {umElems} -> Map.foldlWithKey accum mempty umElems
+       where
+@@ -619,6 +620,7 @@ instance Foldable (UView c k) where
+         accum ans _ (UMElem _ _ _ (SJust vd)) = ans <> f vd
+         accum ans _ _ = ans
+
++  {-# INLINE foldr #-}
+   foldr accum ans0 = \case
+     RewDepUView UMap {umElems} -> Map.foldr accum' ans0 umElems
+       where
+@@ -635,6 +637,7 @@ instance Foldable (UView c k) where
+         accum' (UMElem _ _ _ (SJust vd)) ans = accum vd ans
+         accum' _ ans = ans
+
++  {-# INLINE foldl' #-}
+   foldl' accum ans0 = \case
+     RewDepUView UMap {umElems} -> Map.foldl' accum' ans0 umElems
+       where
+@@ -648,6 +651,7 @@ instance Foldable (UView c k) where
+       where
+         accum' ans = maybe ans (accum ans) . umElemDRep
+
++  {-# INLINE length #-}
+   length = size
+
+ -- | `null` for an `UMElem`
+@@ -991,6 +995,7 @@ findWithDefault def k = fromMaybe def . lookup k
+
+ -- | A `UView` is a view, so the size of the view is NOT the same as the size of
+ -- the underlying `UMElem` map.
++{-# INLINE size #-}
+ size :: UView c k v -> Int
+ size = \case
+   PtrUView UMap {umPtrs} -> Map.size umPtrs

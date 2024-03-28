@@ -1,0 +1,9 @@
+--- a/src/Cardano/Ledger/Allegra.hs
++++ b/src/Cardano/Ledger/Allegra.hs
+@@ -45,4 +45,6 @@ instance
+   ApplyBlock (AllegraEra c)
+
+ instance Crypto c => CanStartFromGenesis (AllegraEra c) where
++  {-# SPECIALISE instance CanStartFromGenesis Allegra #-}
++  {-# INLINE fromShelleyPParams #-}
+   fromShelleyPParams _ = translateEra' ()

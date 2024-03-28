@@ -1,0 +1,12 @@
+diff --git a/src/Control/Iterate/SetAlgebra.hs b/src/Control/Iterate/SetAlgebra.hs
+index 512449d..98989ec 100644
+--- a/src/Control/Iterate/SetAlgebra.hs
++++ b/src/Control/Iterate/SetAlgebra.hs
+@@ -178,6 +178,7 @@ sameDomain m n = loop (hasNxt m) (hasNxt n)
+ -- (dom x) ⊆ (dom y)
+ -- ===============================================================================================
+
++{-# INLINABLE compute #-}
+ compute :: Exp t -> t
+ compute (Base _rep relation) = relation
+ compute (Dom (Base SetR rel)) = rel
