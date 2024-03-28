@@ -793,7 +793,7 @@ index 3aeb0e5..bea0ac9 100644
             packages.hello-ucrt64 = helloPkg-ucrt64.components.exes.hello;
             packages.hello-javascript = helloPkg-javascript.components.exes.hello;
         };
-        kupoPackages.packages = {
+        kupoPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
           kupo-native            = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-kupo";                                             } (kupoPkgs pkgs                                     ).hsPkgs.kupo.components.exes.kupo;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           kupo-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-kupo-static";                     } (kupoPkgs pkgs.pkgsCross.musl64                    ).hsPkgs.kupo.components.exes.kupo;
@@ -810,7 +810,7 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         # Ogmios
-        ogmiosPackages.packages = {
+        ogmiosPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
           ogmios-native       = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-ogmios";                                                  } (ogmiosPkgs pkgs                                     ).hsPkgs.ogmios.components.exes.ogmios;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           ogmios-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-ogmios-static";                     } (ogmiosPkgs pkgs.pkgsCross.musl64                    ).hsPkgs.ogmios.components.exes.ogmios;
@@ -819,7 +819,7 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         # --ghc-option='-fplugin-library=${plutus-tx-plugin}/libplutus-tx-plugin.a;plutus-tx-plugin;PlutusTx.Plugin;[]'
-        hydraPackages.packages = {
+        hydraPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
           hydra-native       = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-hydra-node";                                                  } (hydraPkgs pkgs                                     ).hsPkgs.hydra-node.components.exes.hydra-node;
         } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
           plutus-tx-plugin   = (hydraPkgs pkgs).hsPkgs.plutus-tx-plugin.components.library.override {
@@ -834,9 +834,10 @@ index 3aeb0e5..bea0ac9 100644
           # hydra-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-hydra-node";             } (hydraPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.hydra-node.components.exes.hydra-node;
         };
 
-        dbSyncPackages.packages = {
+        dbSyncPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
           db-sync                   = let plat = pkgs;                                      hsPkgs = (dbSyncPkg "ghc810" pkgs).hsPkgs;
                                       in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+          db-sync-8107                   = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync-8107";                                             } (dbSyncPkg "ghc8107" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
           db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc810" pkgs).hsPkgs;
                                       in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}-${inputs.db-sync.shortRev}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
@@ -847,8 +848,6 @@ index 3aeb0e5..bea0ac9 100644
                                       in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
           # db-sync-dynamic-arm64     = let plat = pkgs.pkgsCross.aarch64-multiplatform;      hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
           #                             in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-        } // {
-          db-sync-8107                   = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync-8107";                                             } (dbSyncPkg "ghc8107" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
         } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
           # we can not build this, text-2 prohibits aarch64 with 8107.
           # db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
@@ -890,28 +889,28 @@ index 3aeb0e5..bea0ac9 100644
             cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
         cardanoNodePackagesPatched.packages =
-          {}
-          # let node = pkgs: map (exe: (cardanoNodePkg true pkgs).hsPkgs.${exe}.components.exes.${exe}) [
-          #       "cardano-node" "cardano-submit-api"
-          #       # cardano-cli comes from CHaP, otherwise we'd have to pull it from the cardano-cli repo.
-          #       "cardano-cli"
-          #     ];
-          #     pkg = comps: pkgs.packaging.asZip {
-          #       name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
-          #         comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
-          #         comp.passthru.identifier.name      # pkg name, e.g. cabal-install
-          #         comp.version                       # component version, e.g. 3.10.3.0
-          #         comp.src.origSrc.shortRev          # source rev, e.g. 256f85d
-          #       ];
-          #     } comps;
-          # in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
-          #   cardano-tools-patched = pkg (node pkgs);
-          # } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          #   cardano-tools-static-patched       = pkg (node pkgs.pkgsCross.musl64);
-          #   cardano-tools-static-arm64-patched = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
-          #   cardano-tools-ucrt-patched         = pkg (node pkgs.pkgsCross.ucrt64);
-          #   cardano-tools-mingwW64-patched     = pkg (node pkgs.pkgsCross.mingwW64);
-          # }
+          # {}
+          let node = pkgs: map (exe: (cardanoNodePkg true pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+                "cardano-node" "cardano-submit-api"
+                # cardano-cli comes from CHaP, otherwise we'd have to pull it from the cardano-cli repo.
+                "cardano-cli"
+              ];
+              pkg = comps: pkgs.packaging.asZip {
+                name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
+                  comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
+                  comp.passthru.identifier.name      # pkg name, e.g. cabal-install
+                  comp.version                       # component version, e.g. 3.10.3.0
+                  comp.src.origSrc.shortRev          # source rev, e.g. 256f85d
+                ];
+              } comps;
+          in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+            cardano-tools-patched = pkg (node pkgs);
+          } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+            cardano-tools-static-patched       = pkg (node pkgs.pkgsCross.musl64);
+            cardano-tools-static-arm64-patched = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
+            cardano-tools-ucrt-patched         = pkg (node pkgs.pkgsCross.ucrt64);
+            cardano-tools-mingwW64-patched     = pkg (node pkgs.pkgsCross.mingwW64);
+          }
           ;
         cabalInstallPackages.packages =
           let cabal = pkgs: (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal;

@@ -1,22 +1,8 @@
 diff --git a/src/Cardano/Ledger/Alonzo.hs b/src/Cardano/Ledger/Alonzo.hs
-index 65d8905..c26deb4 100644
+index 65d8905..18d1f1e 100644
 --- a/src/Cardano/Ledger/Alonzo.hs
 +++ b/src/Cardano/Ledger/Alonzo.hs
-@@ -49,10 +49,13 @@ import Control.Monad.Except (MonadError, liftEither)
- import Control.Monad.Reader (runReader)
- import Control.State.Transition.Extended (TRC (TRC))
-
-+import qualified Debug.Trace
-+
- type Alonzo = AlonzoEra StandardCrypto
-
- -- =====================================================
-
-+{-# INLINE reapplyAlonzoTx #-}
- reapplyAlonzoTx ::
-   forall era m.
-   (API.ApplyTx era, MonadError (ApplyTxError era) m) =>
-@@ -70,10 +73,15 @@ reapplyAlonzoTx globals env state vtx =
+@@ -70,10 +70,16 @@ reapplyAlonzoTx globals env state vtx =
     in liftEither . left API.ApplyTxError $ res
 
  instance (Crypto c, DSignable c (Hash c EraIndependentTxBody)) => API.ApplyTx (AlonzoEra c) where
@@ -27,6 +13,7 @@ index 65d8905..c26deb4 100644
 -instance (Crypto c, DSignable c (Hash c EraIndependentTxBody)) => API.ApplyBlock (AlonzoEra c)
 +instance (Crypto c, DSignable c (Hash c EraIndependentTxBody)) => API.ApplyBlock (AlonzoEra c) where
 +  {-# SPECIALIZE instance API.ApplyBlock (AlonzoEra StandardCrypto) #-}
++
 
  instance Crypto c => API.CanStartFromGenesis (AlonzoEra c) where
 +  {-# SPECIALIZE instance API.CanStartFromGenesis (AlonzoEra StandardCrypto) #-}
@@ -34,24 +21,14 @@ index 65d8905..c26deb4 100644
 +  {-# INLINE fromShelleyPParams #-}
    fromShelleyPParams ag = translateEra' ag . API.fromShelleyPParams ()
 diff --git a/src/Cardano/Ledger/Alonzo/UTxO.hs b/src/Cardano/Ledger/Alonzo/UTxO.hs
-index 64a5d08..2923ce6 100644
+index 64a5d08..082398f 100644
 --- a/src/Cardano/Ledger/Alonzo/UTxO.hs
 +++ b/src/Cardano/Ledger/Alonzo/UTxO.hs
-@@ -64,6 +64,8 @@ deriving instance AlonzoEraScript era => Eq (AlonzoScriptsNeeded era)
- deriving instance AlonzoEraScript era => Show (AlonzoScriptsNeeded era)
-
- instance Crypto c => EraUTxO (AlonzoEra c) where
-+  {-# SPECIALIZE instance EraUTxO (AlonzoEra StandardCrypto) #-}
-+
-   type ScriptsNeeded (AlonzoEra c) = AlonzoScriptsNeeded (AlonzoEra c)
-
-   getConsumedValue = getConsumedMaryValue
-@@ -104,6 +106,8 @@ class EraUTxO era => AlonzoEraUTxO era where
+@@ -104,6 +104,7 @@ class EraUTxO era => AlonzoEraUTxO era where
      Maybe (Data era)
 
  instance Crypto c => AlonzoEraUTxO (AlonzoEra c) where
 +  {-# SPECIALIZE instance AlonzoEraUTxO (AlonzoEra StandardCrypto) #-}
-+
    getSupplementalDataHashes _ = getAlonzoSupplementalDataHashes
 
    getSpendingDatum = getAlonzoSpendingDatum

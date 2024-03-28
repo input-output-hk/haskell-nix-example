@@ -1,19 +1,23 @@
---- a/src/Data/SOP/NP.hs	2001-09-09 01:46:40.000000000 +0000
-+++ b/src/Data/SOP/NP.hs	2024-03-25 08:01:25.594767799 +0000
-@@ -256,6 +256,7 @@
- cpure_NP p f = case sList :: SList xs of
-   SNil   -> Nil
-   SCons  -> f :* cpure_NP p f
+diff --git a/src/Data/SOP/NP.hs b/src/Data/SOP/NP.hs
+index 194d081..828d3a2 100644
+--- a/src/Data/SOP/NP.hs
++++ b/src/Data/SOP/NP.hs
+@@ -251,6 +251,7 @@ topP = Proxy
+ -- The call @'cpure_NP' p x@ generates a product that contains 'x' in every
+ -- element position.
+ --
 +{-# INLINE cpure_NP #-}
-
- -- | Specialization of 'hcpure'.
+ cpure_NP :: forall c xs proxy f. All c xs
+          => proxy c -> (forall a. c a => f a) -> NP f xs
+ cpure_NP p f = case sList :: SList xs of
+diff --git a/src/Data/SOP/Sing.hs b/src/Data/SOP/Sing.hs
+index 1d5071a..94d5e56 100644
+--- a/src/Data/SOP/Sing.hs
++++ b/src/Data/SOP/Sing.hs
+@@ -81,6 +81,7 @@ case_SList nil cons =
+ -- | Get hold of an explicit singleton (that one can then
+ -- pattern match on) for a type-level list
  --
---- a/src/Data/SOP/Sing.hs	2001-09-09 01:46:40.000000000 +0000
-+++ b/src/Data/SOP/Sing.hs	2024-03-25 08:01:25.594767799 +0000
-@@ -83,6 +83,7 @@
- --
++{-# INLINABLE sList #-}
  sList :: SListI xs => SList xs
  sList = ccase_SList (Proxy :: Proxy Top) SNil SCons
-+{-# INLINABLE sList #-}
-
- -- * Shape of type-level lists

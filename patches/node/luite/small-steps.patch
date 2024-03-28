@@ -1,6 +1,8 @@
---- a/src/Control/State/Transition/Extended.hs	2001-09-09 01:46:40.000000000 +0000
-+++ b/src/Control/State/Transition/Extended.hs	2024-03-25 08:01:25.594767799 +0000
-@@ -411,6 +411,7 @@
+diff --git a/src/Control/State/Transition/Extended.hs b/src/Control/State/Transition/Extended.hs
+index c21d242..8fa10a8 100644
+--- a/src/Control/State/Transition/Extended.hs
++++ b/src/Control/State/Transition/Extended.hs
+@@ -439,6 +439,7 @@ labeledPredE lbls cond orElse = labeled lbls (cond ?!: orElse)
  labeled :: NonEmpty Label -> Rule sts ctx () -> Rule sts ctx ()
  labeled lbls subrule = liftF $ Label lbls subrule ()
 
@@ -8,7 +10,7 @@
  trans ::
    Embed sub super => RuleContext rtype sub -> Rule super rtype (State sub)
  trans ctx = wrap $ SubTrans ctx pure
-@@ -421,6 +422,7 @@
+@@ -449,6 +450,7 @@ ifFailureFree x y = liftF (IfFailureFree x y)
  whenFailureFree :: Rule sts rtype () -> Rule sts rtype ()
  whenFailureFree action = ifFailureFree action (pure ())
 
@@ -16,7 +18,7 @@
  liftSTS ::
    STS sts =>
    (BaseM sts) a ->
-@@ -428,6 +430,7 @@
+@@ -456,6 +458,7 @@ liftSTS ::
  liftSTS f = wrap $ Lift f pure
 
  -- | Get the judgment context

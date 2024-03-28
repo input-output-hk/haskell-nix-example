@@ -1,6 +1,8 @@
---- a/src/Control/Monad/Free/Class.hs	2001-09-09 01:46:40.000000000 +0000
-+++ b/src/Control/Monad/Free/Class.hs	2024-03-25 08:01:25.594767799 +0000
-@@ -149,6 +149,7 @@
+diff --git a/src/Control/Monad/Free/Class.hs b/src/Control/Monad/Free/Class.hs
+index ba1677d..ee60b55 100644
+--- a/src/Control/Monad/Free/Class.hs
++++ b/src/Control/Monad/Free/Class.hs
+@@ -149,6 +149,7 @@ instance (Functor f, MonadFree f m) => MonadFree f (ListT m) where
  #endif
 
  -- | A version of lift that can be used with just a Functor for f.
@@ -8,7 +10,7 @@
  liftF :: (Functor f, MonadFree f m) => f a -> m a
  liftF = wrap . fmap return
 
-@@ -156,5 +157,6 @@
+@@ -156,5 +157,6 @@ liftF = wrap . fmap return
  --
  -- /Note:/ that this is the default implementation for 'wrap' for
  -- @MonadFree f (t m)@.

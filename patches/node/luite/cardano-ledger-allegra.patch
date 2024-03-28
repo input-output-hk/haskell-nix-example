@@ -1,6 +1,6 @@
---- a/src/Cardano/Ledger/Allegra.hs	2001-09-09 01:46:40.000000000 +0000
-+++ b/src/Cardano/Ledger/Allegra.hs	2024-03-25 08:01:25.590767798 +0000
-@@ -45,4 +45,6 @@
+--- a/src/Cardano/Ledger/Allegra.hs
++++ b/src/Cardano/Ledger/Allegra.hs
+@@ -45,4 +45,6 @@ instance
    ApplyBlock (AllegraEra c)
 
  instance Crypto c => CanStartFromGenesis (AllegraEra c) where

@@ -1,6 +1,8 @@
---- a/src/Control/Iterate/SetAlgebra.hs	2001-09-09 01:46:40.000000000 +0000
-+++ b/src/Control/Iterate/SetAlgebra.hs	2024-03-25 08:01:25.594767799 +0000
-@@ -178,6 +178,7 @@
+diff --git a/src/Control/Iterate/SetAlgebra.hs b/src/Control/Iterate/SetAlgebra.hs
+index 512449d..98989ec 100644
+--- a/src/Control/Iterate/SetAlgebra.hs
++++ b/src/Control/Iterate/SetAlgebra.hs
+@@ -178,6 +178,7 @@ sameDomain m n = loop (hasNxt m) (hasNxt n)
  -- (dom x) ⊆ (dom y)
  -- ===============================================================================================
 
