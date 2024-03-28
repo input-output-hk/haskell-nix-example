@@ -89,6 +89,15 @@
               static-gmp = (final.gmp.override { withStatic = true; }).overrideDerivation (old: {
                 configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ];
               });
+              static-postgresql = (final.postgresql.override { gssSupport = false; }).overrideDerivation (old: {
+                # ensure we don't drop static libraries.
+                dontDisableStatic = true;
+                postInstall = old.postInstall + ''
+                  # drop all dynamic stuff.
+                  rm -fR $out/lib/*.dylib
+                  rm -fR $lib/lib/*.dylib
+                '';
+              });
               static-libcxxabi = (final.libcxxabi.override { enableShared = false; });
               static-libblst = (final.libblst.override { enableShared = false; }).overrideDerivation (old: {
                 postFixup = "";
@@ -439,6 +448,8 @@
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
+                "-L${__trace "${static-postgresql}/lib ${lib.getLib static-postgresql}/lib" (lib.getLib static-postgresql)}/lib"
+                "-L${static-postgresql}/lib" "-optl-Wl,-lpgport" "-optl-Wl,-lpgcommon"
               ];
             })
           (pkgs.lib.mkIf (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) {
