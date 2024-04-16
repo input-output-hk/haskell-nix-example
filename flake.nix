@@ -720,6 +720,60 @@ index 3aeb0e5..bea0ac9 100644
           modules = [
             ({ lib, config, ... }:{
               packages.Cabal.patches = lib.mkForce [];
+              packages.cabal-install.patches = [
+                (builtins.toFile "cabal-install-hooks.patch" ''
+--- a/src/Distribution/Client/ProjectBuilding.hs
++++ b/src/Distribution/Client/ProjectBuilding.hs
+@@ -102,6 +102,7 @@
+ import Control.Exception (Handler (..), SomeAsyncException, assert, catches, handle)
+ import System.Directory  (canonicalizePath, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, removeFile, renameDirectory)
+ import System.FilePath   (dropDrive, makeRelative, normalise, takeDirectory, (<.>), (</>))
++import qualified System.Process as Process
+ import System.IO         (IOMode (AppendMode), Handle, withFile)
+
+ import Distribution.Compat.Directory (listDirectory)
+@@ -989,8 +990,22 @@
+     -- Build phase
+     noticeProgress ProgressBuilding
+
+-    annotateFailure mlogFile BuildFailed $
+-      setup buildCommand buildFlags
++    annotateFailure mlogFile BuildFailed $ do
++       -- run preBuildHook. If it returns with 0, we assume the build was
++       -- successful. If not, run the build.
++       code <- rawSystemExitCodeX verbosity (Just srcdir) "preBuildHook" [
++           (unUnitId $ installedUnitId rpkg)
++         , srcdir
++         , builddir
++         ] `catchIO` (\_ -> return (ExitFailure 10))
++       when (code /= ExitSuccess) $ do
++         setup buildCommand buildFlags
++         -- not sure, if we want to care about a failed postBuildHook?
++         void $ rawSystemExitCodeX verbosity (Just srcdir) "postBuildHook" [
++             (unUnitId $ installedUnitId rpkg)
++           , srcdir
++           , builddir
++           ] `catchIO` (\_ -> return (ExitFailure 10))
+
+     -- Haddock phase
+     whenHaddock $ do
+@@ -1197,6 +1212,15 @@
+         Just logFile -> withFile logFile AppendMode (action . Just)
+
+
++rawSystemExitCodeX :: Verbosity -> Maybe FilePath -> FilePath -> [String] -> IO ExitCode
++rawSystemExitCodeX verbosity mbWorkDir path args =
++    rawSystemProc verbosity $
++      (Process.proc path args)
++        { Process.cwd = mbWorkDir
++        }
++
++
++
+ hasValidHaddockTargets :: ElaboratedConfiguredPackage -> Bool
+ hasValidHaddockTargets ElaboratedConfiguredPackage{..}
+   | not elabBuildHaddocks = False
+                '')];
             })
             (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
               packages.cabal-install.components.exes.cabal.ghcOptions = with pkgs; [
@@ -913,7 +967,7 @@ index 3aeb0e5..bea0ac9 100644
           }
           ;
         cabalInstallPackages.packages =
-          let cabal = pkgs: (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal;
+          let cabal = pkgs: (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal.overrideDerivation (_: { patches = []; });
               pkg = comps: pkgs.packaging.asZip {
                 name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
                   comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
