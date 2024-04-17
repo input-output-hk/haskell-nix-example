@@ -981,7 +981,7 @@ index 3aeb0e5..bea0ac9 100644
           } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
             cabal-install-hooks        = pkgs.buildPackages.stdenv.mkDerivation {
                 name = "cabal-hooks";
-                buildInputs = [ pkgs.buildPackages.tar ];
+                buildInputs = [ pkgs.buildPackages.gnutar ];
 
                 phases = [ "installPhase" ];
 
