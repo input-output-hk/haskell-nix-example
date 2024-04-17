@@ -979,6 +979,24 @@ index 3aeb0e5..bea0ac9 100644
           in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
             cabal-install-static       = pkg (cabal pkgs);
           } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+            cabal-install-hooks        = pkgs.buildPackages.stdenv.mkDerivation {
+                name = "cabal-hooks";
+                buildInputs = [ pkgs.buildPackages.zip ];
+
+                phases = [ "installPhase" ];
+
+                installPhase = ''
+                  mkdir -p "cabal-hooks";
+                  ls ${./cabal-hooks}
+                  cp ${./cabal-hooks}/* cabal-hooks/
+                  mkdir -p $out
+                  (cd cabal-hooks && zip -r -9 $out/cabal-hooks.zip *)
+
+                  mkdir -p $out/nix-support
+                  echo "file binary-dist \"$(echo $out/*.zip)\"" \
+                  > $out/nix-support/hydra-build-products
+                '';
+              };
             cabal-install-static       = pkg (cabal pkgs.pkgsCross.musl64);
             cabal-install-static-arm64 = pkg (cabal pkgs.pkgsCross.aarch64-multiplatform-musl);
             cabal-install-ucrt         = pkg (cabal pkgs.pkgsCross.ucrt64);
