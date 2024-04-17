@@ -981,7 +981,7 @@ index 3aeb0e5..bea0ac9 100644
           } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
             cabal-install-hooks        = pkgs.buildPackages.stdenv.mkDerivation {
                 name = "cabal-hooks";
-                buildInputs = [ pkgs.buildPackages.zip ];
+                buildInputs = [ pkgs.buildPackages.tar ];
 
                 phases = [ "installPhase" ];
 
@@ -990,10 +990,10 @@ index 3aeb0e5..bea0ac9 100644
                   ls ${./cabal-hooks}
                   cp ${./cabal-hooks}/* cabal-hooks/
                   mkdir -p $out
-                  (cd cabal-hooks && zip -r -9 $out/cabal-hooks.zip *)
+                  (cd cabal-hooks && tar -czf $out/cabal-hooks.tar.gz *)
 
                   mkdir -p $out/nix-support
-                  echo "file binary-dist \"$(echo $out/*.zip)\"" \
+                  echo "file binary-dist \"$(echo $out/*.tar.gz)\"" \
                   > $out/nix-support/hydra-build-products
                 '';
               };
