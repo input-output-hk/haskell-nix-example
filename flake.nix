@@ -1108,7 +1108,9 @@ index 3aeb0e5..bea0ac9 100644
       in addHydraJobs (
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
-          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages cardanoNodePackagesPatched nixToolsPackages nixToolsPackagesNoIfd mithrilPackages cabalInstallPackages ]
+          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages cardanoNodePackagesPatched
+            # nixToolsPackages nixToolsPackagesNoIfd
+            mithrilPackages cabalInstallPackages ]
       )
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; });
           lib.recursiveUpdate flake {
