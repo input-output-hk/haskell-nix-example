@@ -1115,20 +1115,20 @@ index 3aeb0e5..bea0ac9 100644
     ); in with (import nixpkgs { system = "x86_64-linux"; overlays = [(import ./download.nix)]; });
           lib.recursiveUpdate flake {
             hydraJobs.index = hydra-utils.mkIndex flake;
-            hydraJobs.nix-tools = pkgs.releaseTools.aggregate {
-              name = "nix-tools";
-              constituents = [
-                "aarch64-darwin.nix-tools-static"
-                "x86_64-darwin.nix-tools-static"
-                "x86_64-linux.nix-tools-static"
-                "x86_64-linux.nix-tools-static-arm64"
-                "aarch64-darwin.nix-tools-static-no-ifd"
-                "x86_64-darwin.nix-tools-static-no-ifd"
-                "x86_64-linux.nix-tools-static-no-ifd"
-                "x86_64-linux.nix-tools-static-arm64-no-ifd"
-                (writeText "gitrev" (self.rev or "0000000000000000000000000000000000000000"))
-              ];
-            };
+            # hydraJobs.nix-tools = pkgs.releaseTools.aggregate {
+            #   name = "nix-tools";
+            #   constituents = [
+            #     "aarch64-darwin.nix-tools-static"
+            #     "x86_64-darwin.nix-tools-static"
+            #     "x86_64-linux.nix-tools-static"
+            #     "x86_64-linux.nix-tools-static-arm64"
+            #     "aarch64-darwin.nix-tools-static-no-ifd"
+            #     "x86_64-darwin.nix-tools-static-no-ifd"
+            #     "x86_64-linux.nix-tools-static-no-ifd"
+            #     "x86_64-linux.nix-tools-static-arm64-no-ifd"
+            #     (writeText "gitrev" (self.rev or "0000000000000000000000000000000000000000"))
+            #   ];
+            # };
             # hydraJobs.all-nix-tools = runCommand "all-nix-tools" {
             #   } ''
             #   mkdir $out
