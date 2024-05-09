@@ -4,6 +4,12 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     haskellNix.url = "github:input-output-hk/haskell.nix?ref=angerman/fix-aarch64-musl";
+    hackageNix = {
+      url = "github:input-output-hk/hackage.nix";
+      flake = false;
+    };
+    haskellNix.inputs.hackage.follows = "hackageNix";
+
     iserv-proxy = {
       url = "github:stable-haskell/iserv-proxy?ref=iserv-syms";
       flake = false;
@@ -716,7 +722,7 @@ index 3aeb0e5..bea0ac9 100644
         };
         cabalPkg = pkgs: pkgs.haskell-nix.project' {
           compiler-nix-name = "ghc964";
-          src = inputs.cabal-install;
+          src = inputs.cabal-install // { filterPath = { path, ... }: path; };
           modules = [
             ({ lib, config, ... }:{
               packages.Cabal.patches = lib.mkForce [];

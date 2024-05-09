@@ -293,14 +293,14 @@
         "url": "https://gitlab.haskell.org/ghc/ghc"
       }
     },
-    "hackage": {
+    "hackageNix": {
       "flake": false,
       "locked": {
-        "lastModified": 1708906978,
-        "narHash": "sha256-GTcMtNGWpRJ/LAFkcQjNS+mneNMjcRNyg3x11eKI62g=",
+        "lastModified": 1715214831,
+        "narHash": "sha256-HJdB/AIS0LTs/ko37L8o9Thw3v5UVgEiwrwP6mK0NvY=",
         "owner": "input-output-hk",
         "repo": "hackage.nix",
-        "rev": "93d5bc1145240077425ef31bb73eaa76a68e52fa",
+        "rev": "6effcc28a0c73517dfbebc4c2a8fc6f26a6c26a4",
         "type": "github"
       },
       "original": {
@@ -320,7 +320,9 @@
         "ghc-8.6.5-iohk": "ghc-8.6.5-iohk",
         "ghc98X": "ghc98X",
         "ghc99": "ghc99",
-        "hackage": "hackage",
+        "hackage": [
+          "hackageNix"
+        ],
         "hls-1.10": "hls-1.10",
         "hls-2.0": "hls-2.0",
         "hls-2.2": "hls-2.2",
@@ -901,6 +903,7 @@
         "db-sync": "db-sync",
         "encoins": "encoins",
         "flake-utils": "flake-utils",
+        "hackageNix": "hackageNix",
         "haskellNix": "haskellNix",
         "hydra": "hydra_2",
         "iohkNix": "iohkNix",
