@@ -104,11 +104,11 @@
     "cabal-install": {
       "flake": false,
       "locked": {
-        "lastModified": 1715066063,
-        "narHash": "sha256-hELQlZP8b1Ch9X0VSGSnUI3XjkBhcvpnSaY0UQaKyQM=",
+        "lastModified": 1715233486,
+        "narHash": "sha256-3uwszuvs/9EZ8osYbBSO27mTpXti9TYoNAgqeMP46hY=",
         "owner": "erikd",
         "repo": "cabal",
-        "rev": "ffa9b5eb53838710a46702502821f71120fbdc3d",
+        "rev": "98b6d7f8514925d17080371205be9c67588fbe2f",
         "type": "github"
       },
       "original": {
