@@ -1114,7 +1114,8 @@ index 3aeb0e5..bea0ac9 100644
       in addHydraJobs (
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
-          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages cardanoNodePackagesPatched
+          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages
+            # cardanoNodePackagesPatched -- patched contains luites patches, not relevant right now.
             # nixToolsPackages nixToolsPackagesNoIfd
             mithrilPackages cabalInstallPackages ]
       )
