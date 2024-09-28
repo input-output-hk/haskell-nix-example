@@ -121,16 +121,16 @@
     "cardano-node": {
       "flake": false,
       "locked": {
-        "lastModified": 1726677789,
-        "narHash": "sha256-utAO4ZP9EAW4LdMT/hdMoykwT/h9gizoVvCbmYfAZSQ=",
+        "lastModified": 1727221818,
+        "narHash": "sha256-i582YpBy+hBth73JqfcjGFsJrTQeDG0NJ7vN8JLWeoI=",
         "owner": "input-output-hk",
         "repo": "cardano-node",
-        "rev": "341ea87ba3b4936188f8c2d4f09bbf1976a7926e",
+        "rev": "5d3da8ac771ee5ed424d6c78473c11deabb7a1f3",
         "type": "github"
       },
       "original": {
         "owner": "input-output-hk",
-        "ref": "9.2.0",
+        "ref": "9.2.1",
         "repo": "cardano-node",
         "type": "github"
       }
@@ -614,16 +614,16 @@
     "mithril": {
       "flake": false,
       "locked": {
-        "lastModified": 1721986510,
-        "narHash": "sha256-Qk8aEY1nyo6f+cCY6M/4YRSXtn7u31oM1lnPm3Ys80U=",
+        "lastModified": 1726664888,
+        "narHash": "sha256-+ZX4SHcTYc6oKTfMpqZAueS7LdK7dpApc76LQjpPeJA=",
         "owner": "input-output-hk",
         "repo": "mithril",
-        "rev": "52a7beb77c537b54fcb1ca171bf1b1c0c059bad8",
+        "rev": "9fd9ae8ff3e9c37168489fddb67c132ae67387f3",
         "type": "github"
       },
       "original": {
         "owner": "input-output-hk",
-        "ref": "2430.0",
+        "ref": "2437.1",
         "repo": "mithril",
         "type": "github"
       }

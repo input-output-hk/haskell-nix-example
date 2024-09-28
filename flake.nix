@@ -33,7 +33,7 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:input-output-hk/cardano-node?ref=9.2.0";
+    cardano-node.url = "github:input-output-hk/cardano-node?ref=9.2.1";
     cardano-node.flake = false;
 
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
@@ -50,7 +50,7 @@
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
     rust-overlay.inputs.flake-utils.follows = "flake-utils";
 
-    mithril.url = "github:input-output-hk/mithril?ref=2430.0";
+    mithril.url = "github:input-output-hk/mithril?ref=2437.1";
     mithril.flake = false;
 
     # kupo needs the crypto overlays from iohk-nix
