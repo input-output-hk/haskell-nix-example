@@ -3,7 +3,7 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    haskellNix.url = "github:input-output-hk/haskell.nix?ref=angerman/fix-aarch64-musl";
+    haskellNix.url = "github:input-output-hk/haskell.nix";
     hackageNix = {
       url = "github:input-output-hk/hackage.nix";
       flake = false;
@@ -57,14 +57,14 @@
     iohkNix.url = "github:input-output-hk/iohk-nix";
     # kupo also needs cardano-haskell-packages
     CHaP = {
-      url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
+      url = "github:IntersectMBO/cardano-haskell-packages?ref=repo";
       flake = false;
     };
   };
 
   outputs = { self, nixpkgs, rust-overlay, flake-utils, haskellNix, ... }@inputs:
     # choose the compiler you want. For now we use ghc964.
-    let compiler-nix-name = "ghc964"; in
+    let compiler-nix-name = "ghc966"; in
     let flake = flake-utils.lib.eachDefaultSystem (system:
       let
 
@@ -283,7 +283,7 @@
           })];
         };
         hydraPkgs = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc964";
+          compiler-nix-name = "ghc966";
           src = inputs.hydra;
 
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
@@ -647,7 +647,7 @@ index 3aeb0e5..bea0ac9 100644
           ];
         };
         cardanoNodePkg = luites-patches: pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc964";
+          compiler-nix-name = "ghc966";
           src = inputs.cardano-node;
 
           inputMap = {
@@ -662,7 +662,7 @@ index 3aeb0e5..bea0ac9 100644
               "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
             ];
             # Just say no to systemd.
-            packages.cardano-config.flags.systemd = false;
+            # packages.cardano-config.flags.systemd = false;
             packages.cardano-node.flags.systemd = false;
           })
           ({ lib, ... }:
@@ -721,7 +721,7 @@ index 3aeb0e5..bea0ac9 100644
           version = "1.0.0.2";
         };
         cabalPkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc964";
+          compiler-nix-name = "ghc966";
           src = inputs.cabal-install // { filterPath = { path, ... }: path; };
           modules = [
             ({ lib, config, ... }:{
