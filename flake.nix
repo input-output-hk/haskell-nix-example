@@ -650,6 +650,13 @@ index 3aeb0e5..bea0ac9 100644
           compiler-nix-name = "ghc966";
           src = inputs.cardano-node;
 
+          cabalProjectLocal = ''
+          package cardano-node
+            flags: -systemd
+          package cardano-tracer
+            flags: -systemd
+          '';
+
           inputMap = {
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://chap.intersectmbo.org/" = inputs.CHaP;
@@ -664,6 +671,7 @@ index 3aeb0e5..bea0ac9 100644
             # Just say no to systemd.
             # packages.cardano-config.flags.systemd = false;
             packages.cardano-node.flags.systemd = false;
+            packages.cardano-tracer.flags.systemd = false;
           })
           ({ lib, ... }:
             lib.mkIf luites-patches { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
