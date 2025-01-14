@@ -50,7 +50,7 @@
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
     rust-overlay.inputs.flake-utils.follows = "flake-utils";
 
-    mithril.url = "github:input-output-hk/mithril?ref=2437.1";
+    mithril.url = "github:input-output-hk/mithril?ref=2450.0";
     mithril.flake = false;
 
     # kupo needs the crypto overlays from iohk-nix

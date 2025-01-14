@@ -623,16 +623,16 @@
     "mithril": {
       "flake": false,
       "locked": {
-        "lastModified": 1726664888,
-        "narHash": "sha256-+ZX4SHcTYc6oKTfMpqZAueS7LdK7dpApc76LQjpPeJA=",
+        "lastModified": 1733844450,
+        "narHash": "sha256-jT3sjtACWtiS1agD8XR6EKz73YpL0QelIS4RcBJy3F8=",
         "owner": "input-output-hk",
         "repo": "mithril",
-        "rev": "9fd9ae8ff3e9c37168489fddb67c132ae67387f3",
+        "rev": "c6c7ebafae0158b2c1672eb96f6ef832fd542f93",
         "type": "github"
       },
       "original": {
         "owner": "input-output-hk",
-        "ref": "2437.1",
+        "ref": "2450.0",
         "repo": "mithril",
         "type": "github"
       }
