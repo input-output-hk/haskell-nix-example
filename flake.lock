@@ -33,6 +33,23 @@
         "type": "github"
       }
     },
+    "bech32": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1716190741,
+        "narHash": "sha256-U9h6L1OIl8KQCOZKbLaH7ykElhijmb5LKBMCHXGPscU=",
+        "owner": "IntersectMBO",
+        "repo": "bech32",
+        "rev": "5a42857dfe454bb27a899f891cac8415d66d0292",
+        "type": "github"
+      },
+      "original": {
+        "owner": "IntersectMBO",
+        "ref": "v1.1.7",
+        "repo": "bech32",
+        "type": "github"
+      }
+    },
     "blst": {
       "flake": false,
       "locked": {
@@ -939,6 +956,7 @@
     "root": {
       "inputs": {
         "CHaP": "CHaP",
+        "bech32": "bech32",
         "cabal-install": "cabal-install",
         "cardano-addresses": "cardano-addresses",
         "cardano-cli": "cardano-cli",

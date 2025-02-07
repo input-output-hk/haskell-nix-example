@@ -42,6 +42,9 @@
     cardano-addresses.url = "github:IntersectMBO/cardano-addresses?ref=4.0.0";
     cardano-addresses.flake = false;
 
+    bech32.url = "github:IntersectMBO/bech32?ref=v1.1.7";
+    bech32.flake = false;
+
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
     nix-tools.flake = false;
 
@@ -800,7 +803,41 @@ index 3aeb0e5..bea0ac9 100644
           })
           ];
         };
-
+        bech32Pkgs = pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc966";
+          src = inputs.bech32;
+          cabalProjectLocal = "";
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://chap.intersectmbo.org/" = inputs.CHaP;
+          };
+          modules = [({
+            packages.double-conversion.ghcOptions = [
+              # stop putting U __gxx_personality_v0 into the library!
+              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+              # stop putting U __cxa_guard_release into the library!
+              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            ];
+          })
+          # Fix compilation with newer ghc versions
+          ({ lib, config, ... }:
+            lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
+            # lib:ghc is a bit annoying in that it comes with it's own build-type:Custom, and then tries
+            # to call out to all kinds of silly tools that GHC doesn't really provide.
+            # For this reason, we try to get away without re-installing lib:ghc for now.
+            reinstallableLibGhc = false;
+          })
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.bech32.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+            ];
+          })
+          ];
+        };
         # for this simple demo, we'll just use a package from hackage. Namely the
         # trivial `hello` package. See https://hackage.haskell.org/package/hello
         helloPkg = pkgs.haskell-nix.hackage-package {
@@ -966,8 +1003,9 @@ index 3aeb0e5..bea0ac9 100644
               ]
               ++ [
                 (cardanoCliPkg pkgs).hsPkgs.cardano-cli.components.exes.cardano-cli
-                (cardanoAddressesPkg pkgs).hsPkgs.cardano-addresses.components.exes.cardano-address]
-              ;
+                (cardanoAddressesPkg pkgs).hsPkgs.cardano-addresses.components.exes.cardano-address
+                (bech32Pkgs pkgs).hsPkgs.bech32.components.exes.bech32
+              ];
               pkg = comps: pkgs.packaging.asZip {
                 name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
                   comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin

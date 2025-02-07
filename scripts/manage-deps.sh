@@ -39,7 +39,7 @@ update_deps() {
     UPDATES_NEEDED=0
 
     # Loop through components
-    for component in cardano-node cardano-cli cardano-addresses; do
+    for component in cardano-node cardano-cli cardano-addresses bech32; do
         CURRENT_REF=$(get_current_ref "$component")
         LATEST_REF=$(get_latest_release "$component")
         if [ "$CURRENT_REF" != "$LATEST_REF" ]; then
