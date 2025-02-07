@@ -39,6 +39,9 @@
     cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-10.3.0.0";
     cardano-cli.flake = false;
 
+    cardano-addresses.url = "github:IntersectMBO/cardano-addresses?ref=4.0.0";
+    cardano-addresses.flake = false;
+
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
     nix-tools.flake = false;
 
@@ -762,6 +765,42 @@ index 3aeb0e5..bea0ac9 100644
           })
           ];
         };
+        cardanoAddressesPkg = pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc966";
+          src = inputs.cardano-addresses;
+          cabalProjectLocal = "";
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://chap.intersectmbo.org/" = inputs.CHaP;
+          };
+          modules = [({
+            packages.double-conversion.ghcOptions = [
+              # stop putting U __gxx_personality_v0 into the library!
+              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+              # stop putting U __cxa_guard_release into the library!
+              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            ];
+          })
+          # Fix compilation with newer ghc versions
+          ({ lib, config, ... }:
+            lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
+            # lib:ghc is a bit annoying in that it comes with it's own build-type:Custom, and then tries
+            # to call out to all kinds of silly tools that GHC doesn't really provide.
+            # For this reason, we try to get away without re-installing lib:ghc for now.
+            reinstallableLibGhc = false;
+          })
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.cardano-addresses.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+            ];
+          })
+          ];
+        };
+
         # for this simple demo, we'll just use a package from hackage. Namely the
         # trivial `hello` package. See https://hackage.haskell.org/package/hello
         helloPkg = pkgs.haskell-nix.hackage-package {
@@ -922,11 +961,13 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         cardanoNodePackages.packages =
-          let node = pkgs: map (exe: (cardanoCliPkg pkgs).hsPkgs.${exe}.components.exes.${exe} or (cardanoNodePkg false pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+          let node = pkgs: map (exe: (cardanoNodePkg false pkgs).hsPkgs.${exe}.components.exes.${exe}) [
                 "cardano-node" "cardano-submit-api"
-                # cardano-cli comes from CHaP, otherwise we'd have to pull it from the cardano-cli repo.
-                "cardano-cli"
-              ];
+              ]
+              ++ [
+                (cardanoCliPkg pkgs).hsPkgs.cardano-cli.components.exes.cardano-cli
+                (cardanoAddressesPkg pkgs).hsPkgs.cardano-addresses.components.exes.cardano-address]
+              ;
               pkg = comps: pkgs.packaging.asZip {
                 name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
                   comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
@@ -943,30 +984,6 @@ index 3aeb0e5..bea0ac9 100644
             cardano-tools-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
             cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
-        cardanoNodePackagesPatched.packages =
-          # {}
-          let node = pkgs: map (exe: (cardanoNodePkg true pkgs).hsPkgs.${exe}.components.exes.${exe}) [
-                "cardano-node" "cardano-submit-api"
-                # cardano-cli comes from CHaP, otherwise we'd have to pull it from the cardano-cli repo.
-                "cardano-cli"
-              ];
-              pkg = comps: pkgs.packaging.asZip {
-                name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
-                  comp.stdenv.hostPlatform.system    # arch, e.g. aarch64-darwin
-                  comp.passthru.identifier.name      # pkg name, e.g. cabal-install
-                  comp.version                       # component version, e.g. 3.10.3.0
-                  comp.src.origSrc.shortRev          # source rev, e.g. 256f85d
-                ];
-              } comps;
-          in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
-            cardano-tools-patched = pkg (node pkgs);
-          } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-            cardano-tools-static-patched       = pkg (node pkgs.pkgsCross.musl64);
-            cardano-tools-static-arm64-patched = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
-            cardano-tools-ucrt-patched         = pkg (node pkgs.pkgsCross.ucrt64);
-            cardano-tools-mingwW64-patched     = pkg (node pkgs.pkgsCross.mingwW64);
-          }
-          ;
         cabalInstallPackages.packages =
           let cabal = pkgs: (cabalPkg pkgs).hsPkgs.cabal-install.components.exes.cabal.overrideDerivation (_: { patches = []; });
               pkg = comps: pkgs.packaging.asZip {
@@ -1164,7 +1181,6 @@ index 3aeb0e5..bea0ac9 100644
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
           [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages
-            # cardanoNodePackagesPatched -- patched contains luites patches, not relevant right now.
             # nixToolsPackages nixToolsPackagesNoIfd
             mithrilPackages cabalInstallPackages ]
       )

@@ -118,6 +118,23 @@
         "type": "github"
       }
     },
+    "cardano-addresses": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1738655754,
+        "narHash": "sha256-lNCt4V4TyD9EmQwA6dcbEOdhVdAEXPeG4B2IP93icaw=",
+        "owner": "IntersectMBO",
+        "repo": "cardano-addresses",
+        "rev": "3749045778e0d8bb1f2bed1c598594eeed0b442e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "IntersectMBO",
+        "ref": "4.0.0",
+        "repo": "cardano-addresses",
+        "type": "github"
+      }
+    },
     "cardano-cli": {
       "flake": false,
       "locked": {
@@ -923,6 +940,7 @@
       "inputs": {
         "CHaP": "CHaP",
         "cabal-install": "cabal-install",
+        "cardano-addresses": "cardano-addresses",
         "cardano-cli": "cardano-cli",
         "cardano-node": "cardano-node",
         "crane": "crane",
