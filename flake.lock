@@ -118,18 +118,35 @@
         "type": "github"
       }
     },
+    "cardano-cli": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1737027865,
+        "narHash": "sha256-J6G7aa64WXDf8NO0YlEls+RleDaFnicLbkxpZuFCzP0=",
+        "owner": "IntersectMBO",
+        "repo": "cardano-cli",
+        "rev": "0c904ea3332acfdd2f063648400ab52e34bd2e9c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "IntersectMBO",
+        "ref": "cardano-cli-10.3.0.0",
+        "repo": "cardano-cli",
+        "type": "github"
+      }
+    },
     "cardano-node": {
       "flake": false,
       "locked": {
         "lastModified": 1736202991,
         "narHash": "sha256-Oys38YkpSpB48/H2NseP9kTWXm92a7kjAZtdnorcIEY=",
-        "owner": "input-output-hk",
+        "owner": "IntersectMBO",
         "repo": "cardano-node",
         "rev": "1f63dbf2ab39e0b32bf6901dc203866d3e37de08",
         "type": "github"
       },
       "original": {
-        "owner": "input-output-hk",
+        "owner": "IntersectMBO",
         "ref": "10.1.4",
         "repo": "cardano-node",
         "type": "github"
@@ -906,6 +923,7 @@
       "inputs": {
         "CHaP": "CHaP",
         "cabal-install": "cabal-install",
+        "cardano-cli": "cardano-cli",
         "cardano-node": "cardano-node",
         "crane": "crane",
         "db-sync": "db-sync",

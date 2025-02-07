@@ -33,8 +33,11 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:input-output-hk/cardano-node?ref=10.1.4";
+    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.1.4";
     cardano-node.flake = false;
+
+    cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-10.3.0.0";
+    cardano-cli.flake = false;
 
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
     nix-tools.flake = false;
@@ -721,6 +724,44 @@ index 3aeb0e5..bea0ac9 100644
           })
           ];
         };
+        cardanoCliPkg = pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc966";
+          src = inputs.cardano-cli;
+
+          cabalProjectLocal = ''
+          '';
+
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://chap.intersectmbo.org/" = inputs.CHaP;
+          };
+          modules = [({
+            packages.double-conversion.ghcOptions = [
+              # stop putting U __gxx_personality_v0 into the library!
+              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+              # stop putting U __cxa_guard_release into the library!
+              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            ];
+          })
+          # Fix compilation with newer ghc versions
+          ({ lib, config, ... }:
+            lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
+            # lib:ghc is a bit annoying in that it comes with it's own build-type:Custom, and then tries
+            # to call out to all kinds of silly tools that GHC doesn't really provide.
+            # For this reason, we try to get away without re-installing lib:ghc for now.
+            reinstallableLibGhc = false;
+          })
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.cardano-cli.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+            ];
+          })
+          ];
+        };
         # for this simple demo, we'll just use a package from hackage. Namely the
         # trivial `hello` package. See https://hackage.haskell.org/package/hello
         helloPkg = pkgs.haskell-nix.hackage-package {
@@ -881,7 +922,7 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         cardanoNodePackages.packages =
-          let node = pkgs: map (exe: (cardanoNodePkg false pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+          let node = pkgs: map (exe: (cardanoCliPkg pkgs).hsPkgs.${exe}.components.exes.${exe} or (cardanoNodePkg false pkgs).hsPkgs.${exe}.components.exes.${exe}) [
                 "cardano-node" "cardano-submit-api"
                 # cardano-cli comes from CHaP, otherwise we'd have to pull it from the cardano-cli repo.
                 "cardano-cli"
