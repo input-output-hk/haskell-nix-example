@@ -671,12 +671,12 @@ index 3aeb0e5..bea0ac9 100644
             "https://chap.intersectmbo.org/" = inputs.CHaP;
           };
           modules = [({
-            packages.double-conversion.ghcOptions = [
-              # stop putting U __gxx_personality_v0 into the library!
-              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-              # stop putting U __cxa_guard_release into the library!
-              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-            ];
+            # packages.double-conversion.ghcOptions = [
+            #   # stop putting U __gxx_personality_v0 into the library!
+            #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+            #   # stop putting U __cxa_guard_release into the library!
+            #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            # ];
             # Just say no to systemd.
             # packages.cardano-config.flags.systemd = false;
             packages.cardano-node.flags.systemd = false;
@@ -742,12 +742,12 @@ index 3aeb0e5..bea0ac9 100644
             "https://chap.intersectmbo.org/" = inputs.CHaP;
           };
           modules = [({
-            packages.double-conversion.ghcOptions = [
-              # stop putting U __gxx_personality_v0 into the library!
-              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-              # stop putting U __cxa_guard_release into the library!
-              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-            ];
+            # packages.double-conversion.ghcOptions = [
+            #   # stop putting U __gxx_personality_v0 into the library!
+            #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+            #   # stop putting U __cxa_guard_release into the library!
+            #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            # ];
           })
           # Fix compilation with newer ghc versions
           ({ lib, config, ... }:
@@ -777,12 +777,12 @@ index 3aeb0e5..bea0ac9 100644
             "https://chap.intersectmbo.org/" = inputs.CHaP;
           };
           modules = [({
-            packages.double-conversion.ghcOptions = [
-              # stop putting U __gxx_personality_v0 into the library!
-              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-              # stop putting U __cxa_guard_release into the library!
-              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-            ];
+            # packages.double-conversion.ghcOptions = [
+            #   # stop putting U __gxx_personality_v0 into the library!
+            #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+            #   # stop putting U __cxa_guard_release into the library!
+            #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            # ];
           })
           # Fix compilation with newer ghc versions
           ({ lib, config, ... }:
@@ -812,12 +812,12 @@ index 3aeb0e5..bea0ac9 100644
             "https://chap.intersectmbo.org/" = inputs.CHaP;
           };
           modules = [({
-            packages.double-conversion.ghcOptions = [
-              # stop putting U __gxx_personality_v0 into the library!
-              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-              # stop putting U __cxa_guard_release into the library!
-              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-            ];
+            # packages.double-conversion.ghcOptions = [
+            #   # stop putting U __gxx_personality_v0 into the library!
+            #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+            #   # stop putting U __cxa_guard_release into the library!
+            #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            # ];
           })
           # Fix compilation with newer ghc versions
           ({ lib, config, ... }:
