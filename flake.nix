@@ -33,7 +33,7 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.2.1";
+    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.3.1";
     cardano-node.flake = false;
 
     cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-10.3.0.0";
