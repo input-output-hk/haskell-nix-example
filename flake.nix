@@ -4,11 +4,11 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     haskellNix.url = "github:input-output-hk/haskell.nix";
-    hackageNix = {
-      url = "github:input-output-hk/hackage.nix?ref=for-stackage";
-      flake = false;
-    };
-    haskellNix.inputs.hackage.follows = "hackageNix";
+    #hackageNix = {
+    #  url = "github:input-output-hk/hackage.nix?ref=for-stackage";
+    #  flake = false;
+    #};
+    #haskellNix.inputs.hackage.follows = "hackageNix";
 
     iserv-proxy = {
       url = "github:stable-haskell/iserv-proxy?ref=iserv-syms";
@@ -33,7 +33,7 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.3.1";
+    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.4.1";
     cardano-node.flake = false;
 
     cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-10.3.0.0";
@@ -59,7 +59,7 @@
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
     rust-overlay.inputs.flake-utils.follows = "flake-utils";
 
-    mithril.url = "github:input-output-hk/mithril?ref=2450.0";
+    mithril.url = "github:input-output-hk/mithril?ref=2517.1";
     mithril.flake = false;
 
     # kupo needs the crypto overlays from iohk-nix
