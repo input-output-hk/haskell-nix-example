@@ -120,6 +120,13 @@
               static-openssl = (final.openssl.override { static = true; });
               static-zlib = final.zlib.override { shared = false; };
               static-pcre = final.pcre.override { shared = false; };
+              static-lmdb = final.lmdb.overrideDerivation (old: {
+                postInstall = old.postInstall + ''
+                  # drop all dynamic stuff.
+                  rm -fR $out/lib/*.so
+                  rm -fR $lib/lib/*.so
+                '';
+              });
             })
           ];
           # Also ensure we are using haskellNix config. Otherwise we won't be
@@ -159,6 +166,7 @@
               ];
           };
           inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+                       "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
                        "https://chap.intersectmbo.org" = inputs.CHaP;
                       };
           sha256map = {
@@ -167,14 +175,15 @@
             "https://github.com/CardanoSolutions/text-ansi"."dd81fe6b30e78e95589b29fd1b7be1c18bd6e700" = "0c9ckqcl4lahmkkfhj95bwwj4l2w8hlw0429gi1yly2mbdb688cq";
             "https://github.com/CardanoSolutions/text-ansi"."e204822d2f343b2d393170a2ec46ee935571345c" = "16ki7wsf7wivxn65acv4hxwfrzmphq4zp61lpxwzqkgrg8shi8bv";
           };
-          modules = [{
-            packages.double-conversion.ghcOptions = [
-              # stop putting U __gxx_personality_v0 into the library!
-              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-              # stop putting U __cxa_guard_release into the library!
-              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-            ];
-          }
+          modules = [
+          # {
+          #   packages.double-conversion.ghcOptions = [
+          #     # stop putting U __gxx_personality_v0 into the library!
+          #     "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+          #     # stop putting U __cxa_guard_release into the library!
+          #     "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+          #   ];
+          # }
           (pkgs.lib.mkIf (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) {
             packages.plutus-core.patches = [
               # This patch is needed to fix a build error on aarch64-linux.
@@ -237,14 +246,17 @@
                 (baseNameOf path != "package.yaml")
               ];
           };
-          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
+          };
           modules = [{
-            packages.double-conversion.ghcOptions = [
-              # stop putting U __gxx_personality_v0 into the library!
-              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-              # stop putting U __cxa_guard_release into the library!
-              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-            ];
+            # packages.double-conversion.ghcOptions = [
+            #   # stop putting U __gxx_personality_v0 into the library!
+            #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+            #   # stop putting U __cxa_guard_release into the library!
+            #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            # ];
             packages.plutus-core.patches = [
               # This patch is needed to fix a build error on aarch64-linux.
               #
@@ -295,14 +307,17 @@
           compiler-nix-name = "ghc966";
           src = inputs.hydra;
 
-          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
+          };
           modules = [{
-            packages.double-conversion.ghcOptions = [
-              # stop putting U __gxx_personality_v0 into the library!
-              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-              # stop putting U __cxa_guard_release into the library!
-              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-            ];
+            # packages.double-conversion.ghcOptions = [
+            #   # stop putting U __gxx_personality_v0 into the library!
+            #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+            #   # stop putting U __cxa_guard_release into the library!
+            #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            # ];
             packages.gitrev.patches = [
               (builtins.toFile "gitrev.patch" ''
               diff --git a/src/Development/GitRev.hs b/src/Development/GitRev.hs
@@ -418,7 +433,10 @@
           inherit compiler-nix-name;
           src = inputs.db-sync;
 
-          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
+          };
           modules = [
             {
               # db-sync annoyingly has symlinks to the schema files, which are in ../schema,
@@ -432,14 +450,14 @@
                 ["../config/pgpass-testnet"];
             }
             ({
-              packages.double-conversion.ghcOptions = [
-                # stop putting U __gxx_personality_v0 into the library!
-                "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-                # stop putting U __cxa_guard_release into the library!
-                "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-              ];
+              # packages.double-conversion.ghcOptions = [
+              #   # stop putting U __gxx_personality_v0 into the library!
+              #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+              #   # stop putting U __cxa_guard_release into the library!
+              #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+              # ];
               # Just say no to systemd.
-              packages.cardano-config.flags.systemd = false;
+              # packages.cardano-config.flags.systemd = false;
               packages.cardano-node.flags.systemd = false;
             })
             ({
@@ -534,7 +552,10 @@
           src = let subdir = input: path: input // { outPath = "${input}/${path}"; };
                 in subdir inputs.nix-tools "nix-tools";
 
-          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
+          };
           modules = [
           #   ({
           #   packages.double-conversion.ghcOptions = [
@@ -620,7 +641,10 @@ index 3aeb0e5..bea0ac9 100644
             src = inputs.encoins;
           };
 
-          inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP; };
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
+          };
 
           sha256map = {
             "https://github.com/encryptedcoins/cardano-server"."eae2d8293162bb399e8136bd5b4e54f8fd5488d3" = "0af98y93cv8kw5jl05vy4nm12sh6lhwm4lcnj4wyvyyyjly4jw9k";
@@ -668,15 +692,16 @@ index 3aeb0e5..bea0ac9 100644
 
           inputMap = {
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://chap.intersectmbo.org/" = inputs.CHaP;
           };
           modules = [({
-            packages.double-conversion.ghcOptions = [
-              # stop putting U __gxx_personality_v0 into the library!
-              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-              # stop putting U __cxa_guard_release into the library!
-              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-            ];
+            # packages.double-conversion.ghcOptions = [
+            #   # stop putting U __gxx_personality_v0 into the library!
+            #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+            #   # stop putting U __cxa_guard_release into the library!
+            #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            # ];
             # Just say no to systemd.
             # packages.cardano-config.flags.systemd = false;
             packages.cardano-node.flags.systemd = false;
@@ -712,6 +737,7 @@ index 3aeb0e5..bea0ac9 100644
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-lmdb}/lib"
             ];
             packages.cardano-cli.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
@@ -719,6 +745,7 @@ index 3aeb0e5..bea0ac9 100644
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-lmdb}/lib"
             ];
             packages.cardano-submit-api.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
@@ -726,6 +753,7 @@ index 3aeb0e5..bea0ac9 100644
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-lmdb}/lib"
             ];
           })
           ];
@@ -739,6 +767,7 @@ index 3aeb0e5..bea0ac9 100644
 
           inputMap = {
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://chap.intersectmbo.org/" = inputs.CHaP;
           };
           modules = [({
@@ -774,15 +803,16 @@ index 3aeb0e5..bea0ac9 100644
           cabalProjectLocal = "";
           inputMap = {
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://chap.intersectmbo.org/" = inputs.CHaP;
           };
           modules = [({
-            packages.double-conversion.ghcOptions = [
-              # stop putting U __gxx_personality_v0 into the library!
-              "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
-              # stop putting U __cxa_guard_release into the library!
-              "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
-            ];
+            # packages.double-conversion.ghcOptions = [
+            #   # stop putting U __gxx_personality_v0 into the library!
+            #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
+            #   # stop putting U __cxa_guard_release into the library!
+            #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
+            # ];
           })
           # Fix compilation with newer ghc versions
           ({ lib, config, ... }:
@@ -809,6 +839,7 @@ index 3aeb0e5..bea0ac9 100644
           cabalProjectLocal = "";
           inputMap = {
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://chap.intersectmbo.org/" = inputs.CHaP;
           };
           modules = [({
@@ -965,29 +996,29 @@ index 3aeb0e5..bea0ac9 100644
           # hydra-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-hydra-node";             } (hydraPkgs pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.hydra-node.components.exes.hydra-node;
         };
 
-        dbSyncPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
-          db-sync                   = let plat = pkgs;                                      hsPkgs = (dbSyncPkg "ghc810" pkgs).hsPkgs;
-                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-8107                   = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync-8107";                                             } (dbSyncPkg "ghc8107" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-        } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
-          db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc810" pkgs).hsPkgs;
-                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}-${inputs.db-sync.shortRev}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
-                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          db-sync-static-musl-arm64 = let plat = pkgs.pkgsCross.aarch64-multiplatform-musl; hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
-                                      in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          # db-sync-dynamic-arm64     = let plat = pkgs.pkgsCross.aarch64-multiplatform;      hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
-          #                             in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-        } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
-          # we can not build this, text-2 prohibits aarch64 with 8107.
-          # db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-        } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          # we can not build this, text-2 prohibits aarch64 with 8107.
-          # db-sync-8107-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-db-sync-8107-static"; } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-          # db-sync-8107-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync-8107";             } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
-        };
+        # dbSyncPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+        #   db-sync                   = let plat = pkgs;                                      hsPkgs = (dbSyncPkg "ghc810" pkgs).hsPkgs;
+        #                               in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        #   db-sync-8107                   = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-db-sync-8107";                                             } (dbSyncPkg "ghc8107" pkgs                                     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        # } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
+        #   db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc810" pkgs).hsPkgs;
+        #                               in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}-${inputs.db-sync.shortRev}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        # } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+        #   db-sync-static-musl       = let plat = pkgs.pkgsCross.musl64;                     hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
+        #                               in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        #   db-sync-static-musl-arm64 = let plat = pkgs.pkgsCross.aarch64-multiplatform-musl; hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
+        #                               in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-static-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}"; } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        #   # db-sync-dynamic-arm64     = let plat = pkgs.pkgsCross.aarch64-multiplatform;      hsPkgs = (dbSyncPkg "ghc810" plat).hsPkgs;
+        #   #                             in pkgs.packaging.asZip { name = "${plat.hostPlatform.system}-db-sync-${hsPkgs.cardano-db-sync.components.exes.cardano-db-sync.version}";        } hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        # } // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
+        #   # we can not build this, text-2 prohibits aarch64 with 8107.
+        #   # db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        # } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+        #   db-sync-8107-static-musl       = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.musl64.hostPlatform.system}-db-sync-8107-static";                     } (dbSyncPkg "ghc8107" pkgs.pkgsCross.musl64                    ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        #   # we can not build this, text-2 prohibits aarch64 with 8107.
+        #   # db-sync-8107-static-musl-arm64 = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform-musl.hostPlatform.system}-db-sync-8107-static"; } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform-musl).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        #   # db-sync-8107-dynamic-arm64     = pkgs.packaging.asZip { name = "${pkgs.pkgsCross.aarch64-multiplatform.hostPlatform.system}-db-sync-8107";             } (dbSyncPkg "ghc8107" pkgs.pkgsCross.aarch64-multiplatform     ).hsPkgs.cardano-db-sync.components.exes.cardano-db-sync;
+        # };
 
         encoinsPackages.packages = {
           encoins-relay-server = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-encoins-relay-server"; } (encoinsPkg pkgs).hsPkgs.encoins-relay-server.components.exes.encoins-relay-server;
@@ -1218,7 +1249,9 @@ index 3aeb0e5..bea0ac9 100644
       in addHydraJobs (
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
-          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages dbSyncPackages encoinsPackages cardanoNodePackages
+          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages
+            #dbSyncPackages
+            encoinsPackages cardanoNodePackages
             # nixToolsPackages nixToolsPackagesNoIfd
             mithrilPackages cabalInstallPackages ]
       )
