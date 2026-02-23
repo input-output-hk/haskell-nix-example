@@ -877,6 +877,40 @@
         "type": "github"
       }
     },
+    "pruned-cardano-node": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1771825739,
+        "narHash": "sha256-iZHxIXgps7jCAjfdxT+xbo8995X7TD2zWoYYgDpTqlg=",
+        "owner": "angerman",
+        "repo": "cardano-node",
+        "rev": "04b02476645373248121fef85923b70c10c3dcc7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "angerman",
+        "ref": "angerman/pruned-mode-mithril",
+        "repo": "cardano-node",
+        "type": "github"
+      }
+    },
+    "pruned-ouroboros-consensus": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1771823142,
+        "narHash": "sha256-Bx29rLJDqZqoMkfpP2n3/IUtfFiIMzQIY72/gu9N/W8=",
+        "owner": "angerman",
+        "repo": "ouroboros-consensus",
+        "rev": "432695b1d062581801d71a2a6c0fb9a378f55c9c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "angerman",
+        "ref": "angerman/pruned-immutabledb",
+        "repo": "ouroboros-consensus",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "CHaP": "CHaP",
@@ -901,6 +935,8 @@
           "nixpkgs-unstable"
         ],
         "ogmios": "ogmios",
+        "pruned-cardano-node": "pruned-cardano-node",
+        "pruned-ouroboros-consensus": "pruned-ouroboros-consensus",
         "rust-overlay": "rust-overlay"
       }
     },
