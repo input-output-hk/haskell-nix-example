@@ -120,7 +120,10 @@
                   rm -fR $lib/lib/*.dylib
                 '';
               });
-              static-libcxxabi = (final.libcxxabi.override { enableShared = false; });
+              # libcxxabi was merged into libcxx in recent nixpkgs
+              static-libcxxabi = if final ? libcxxabi
+                then (final.libcxxabi.override { enableShared = false; })
+                else final.libcxx;
               static-libblst = (final.libblst.override { enableShared = false; }).overrideDerivation (old: {
                 postFixup = "";
               });
@@ -1045,7 +1048,7 @@ index 3aeb0e5..bea0ac9 100644
             # packages.hello-dynamic = helloPkg-dynamic.components.exes.hello;
             packages.hello-mingw = helloPkg-mingw.components.exes.hello;
             packages.hello-ucrt64 = helloPkg-ucrt64.components.exes.hello;
-            packages.hello-javascript = helloPkg-javascript.components.exes.hello;
+            # packages.hello-javascript = helloPkg-javascript.components.exes.hello; -- GHCJS linker bug with GHC 9.6.6
         };
         kupoPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
           kupo-native            = pkgs.packaging.asZip { name = "${pkgs.hostPlatform.system}-kupo";                                             } (kupoPkgs pkgs                                     ).hsPkgs.kupo.components.exes.kupo;
@@ -1284,13 +1287,18 @@ index 3aeb0e5..bea0ac9 100644
           '';
         };
         mithrilPackages.packages = pkgs.lib.optionalAttrs (system == "x86_64-linux")
-          (let mithril-signer = let
+          # Use a writable copy of the source to avoid Nix store permission
+          # errors when crane/cargo tries to modify Cargo.lock.
+          (let mithrilSrc = pkgs.runCommand "mithril-src" {} ''
+                cp -r --no-preserve=mode ${inputs.mithril} $out
+              '';
+              mithril-signer = let
               rustToolchain = rsPkgs.rust-bin.stable.latest.default.override {
                 targets = [ "x86_64-unknown-linux-musl" ];
               };
               craneLib = (inputs.crane.mkLib pkgs.pkgsCross.musl64).overrideToolchain rustToolchain;
               in craneLib.buildPackage (rec {
-                src = inputs.mithril;
+                src = mithrilSrc;
                 strictDeps = true;
 
                 inherit (craneLib.crateNameFromCargoToml { cargoTomlContents = builtins.readFile "${inputs.mithril}/mithril-signer/Cargo.toml";}) pname version;
@@ -1316,7 +1324,7 @@ index 3aeb0e5..bea0ac9 100644
               };
               craneLib = (inputs.crane.mkLib pkgs.pkgsCross.aarch64-multiplatform-musl).overrideToolchain rustToolchain;
               in craneLib.buildPackage (rec {
-                src = inputs.mithril;
+                src = mithrilSrc;
                 strictDeps = true;
 
                 depsBuildBuild = with pkgs.pkgsCross.aarch64-multiplatform-musl.buildPackages; [
@@ -1363,9 +1371,11 @@ index 3aeb0e5..bea0ac9 100644
       in addHydraJobs (
         pkgs.lib.foldl' (pkg: acc: pkgs.lib.recursiveUpdate acc pkg)
           nativePackages
-          [ linuxCrossPackages kupoPackages ogmiosPackages hydraPackages
+          [ linuxCrossPackages kupoPackages hydraPackages
             #dbSyncPackages
-            encoinsPackages cardanoNodePackages prunedCardanoNodePackages
+            #ogmiosPackages  -- ogmios is pinned to GHC 8.10.7 which haskell.nix no longer supports
+            #encoinsPackages -- encoins is pinned to GHC 8.10.7 which haskell.nix no longer supports
+            cardanoNodePackages prunedCardanoNodePackages
             # nixToolsPackages nixToolsPackagesNoIfd
             mithrilPackages cabalInstallPackages ]
       )
