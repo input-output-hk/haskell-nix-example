@@ -180,7 +180,7 @@
                        "https://chap.intersectmbo.org" = inputs.CHaP;
                       };
           sha256map = {
-            "https://github.com/CardanoSolutions/ogmios"."01f7787216e7ceb8e39c8c6807f7ae53fc14ab9e" = "18wxmz3452lwnd169r408b54h5grjws3q25i30nkl425sl4k8p87";
+            "https://github.com/CardanoSolutions/ogmios"."01f7787216e7ceb8e39c8c6807f7ae53fc14ab9e" = "16mdvv3qws92fins673jb2qiw7b9vd0pwzwvq9zvi6zkhhhkfdfm";
             "https://github.com/CardanoSolutions/direct-sqlite"."82c5ab46715ecd51901256144f1411b480e2cb8b" = "1r1g6nf65d9n436ppcjky3gkywpnx4y0a3v88ddngchmf8za3qky";
             "https://github.com/CardanoSolutions/text-ansi"."dd81fe6b30e78e95589b29fd1b7be1c18bd6e700" = "0c9ckqcl4lahmkkfhj95bwwj4l2w8hlw0429gi1yly2mbdb688cq";
             "https://github.com/CardanoSolutions/text-ansi"."e204822d2f343b2d393170a2ec46ee935571345c" = "16ki7wsf7wivxn65acv4hxwfrzmphq4zp61lpxwzqkgrg8shi8bv";
