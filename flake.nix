@@ -800,13 +800,10 @@ index 3aeb0e5..bea0ac9 100644
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://chap.intersectmbo.org/" = inputs.CHaP;
-          };
-
-          # Map the ouroboros-consensus git source to its narHash so haskell.nix
-          # doesn't re-fetch it.
-          sha256map = {
-            "https://github.com/angerman/ouroboros-consensus"."${inputs.pruned-ouroboros-consensus.rev}" =
-              inputs.pruned-ouroboros-consensus.narHash;
+            # Map ouroboros-consensus directly to the flake input to avoid
+            # haskell.nix creating a fetchgit derivation whose name (URL + rev
+            # + 6 subdirs) exceeds the 207-char Nix limit.
+            "https://github.com/angerman/ouroboros-consensus" = inputs.pruned-ouroboros-consensus;
           };
 
           modules = [({
@@ -1290,7 +1287,8 @@ index 3aeb0e5..bea0ac9 100644
           # Use a writable copy of the source to avoid Nix store permission
           # errors when crane/cargo tries to modify Cargo.lock.
           (let mithrilSrc = pkgs.runCommand "mithril-src" {} ''
-                cp -r --no-preserve=mode ${inputs.mithril} $out
+                cp -r ${inputs.mithril} $out
+                chmod -R u+w $out
               '';
               mithril-signer = let
               rustToolchain = rsPkgs.rust-bin.stable.latest.default.override {
