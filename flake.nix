@@ -4,11 +4,11 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     haskellNix.url = "github:input-output-hk/haskell.nix";
-    #hackageNix = {
-    #  url = "github:input-output-hk/hackage.nix?ref=for-stackage";
-    #  flake = false;
-    #};
-    #haskellNix.inputs.hackage.follows = "hackageNix";
+    hackageNix = {
+      url = "github:input-output-hk/hackage.nix";
+      flake = false;
+    };
+    haskellNix.inputs.hackage.follows = "hackageNix";
 
     iserv-proxy = {
       url = "github:stable-haskell/iserv-proxy?ref=iserv-syms";
