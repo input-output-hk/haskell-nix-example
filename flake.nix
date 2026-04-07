@@ -77,7 +77,7 @@
     iohkNix.url = "github:input-output-hk/iohk-nix";
     # kupo also needs cardano-haskell-packages
     CHaP = {
-      url = "github:IntersectMBO/cardano-haskell-packages?ref=repo";
+      url = "github:IntersectMBO/cardano-haskell-packages?rev=568bc3e79b882ed5095cdd652d043c03b5f5b82b";
       flake = false;
     };
   };
