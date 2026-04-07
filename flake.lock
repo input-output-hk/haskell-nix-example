@@ -155,16 +155,16 @@
     "cardano-cli": {
       "flake": false,
       "locked": {
-        "lastModified": 1737027865,
-        "narHash": "sha256-J6G7aa64WXDf8NO0YlEls+RleDaFnicLbkxpZuFCzP0=",
+        "lastModified": 1773944507,
+        "narHash": "sha256-4ECR7cutyLExBguMJs3GCqNISlaRuonSG5QeM+CXrX4=",
         "owner": "IntersectMBO",
         "repo": "cardano-cli",
-        "rev": "0c904ea3332acfdd2f063648400ab52e34bd2e9c",
+        "rev": "cf973b8604222d2bd0a1060037ccab0197c752a4",
         "type": "github"
       },
       "original": {
         "owner": "IntersectMBO",
-        "ref": "cardano-cli-10.3.0.0",
+        "ref": "cardano-cli-10.15.1.0",
         "repo": "cardano-cli",
         "type": "github"
       }
@@ -172,16 +172,33 @@
     "cardano-node": {
       "flake": false,
       "locked": {
-        "lastModified": 1770307293,
-        "narHash": "sha256-66bbnASi59OLBth3VA4PPWqAFyllxfHICh1bbkf6F4k=",
+        "lastModified": 1774886169,
+        "narHash": "sha256-TQHJmtgV33DhEeiOLokDS7BGTUX/4wdQt9DIP62SEuw=",
         "owner": "IntersectMBO",
         "repo": "cardano-node",
-        "rev": "b0a12592c4e996b57edf5bc5b9109ecc88c2273f",
+        "rev": "e252edef4dfcd28ba8987e0c1368c6db0404beac",
         "type": "github"
       },
       "original": {
         "owner": "IntersectMBO",
-        "ref": "10.5.4",
+        "ref": "10.6.3",
+        "repo": "cardano-node",
+        "type": "github"
+      }
+    },
+    "cardano-node-pre": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1774379192,
+        "narHash": "sha256-6b9fX1RNmHdBRpmE4WYFCf13vwZZGg1LHRhHP7GRJHE=",
+        "owner": "IntersectMBO",
+        "repo": "cardano-node",
+        "rev": "1e6d8228693ab2aa4e1d7305e7bdcc57cdd278e4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "IntersectMBO",
+        "ref": "10.7.0",
         "repo": "cardano-node",
         "type": "github"
       }
@@ -919,6 +936,7 @@
         "cardano-addresses": "cardano-addresses",
         "cardano-cli": "cardano-cli",
         "cardano-node": "cardano-node",
+        "cardano-node-pre": "cardano-node-pre",
         "crane": "crane",
         "db-sync": "db-sync",
         "encoins": "encoins",

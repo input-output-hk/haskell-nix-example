@@ -33,8 +33,11 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.5.4";
+    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.6.3";
     cardano-node.flake = false;
+
+    cardano-node-pre.url = "github:IntersectMBO/cardano-node?ref=10.7.0";
+    cardano-node-pre.flake = false;
 
     # Pruned ImmutableDB variant (cardano-node + ouroboros-consensus with pruning support)
     pruned-cardano-node.url = "github:angerman/cardano-node?ref=angerman/pruned-mode-mithril";
@@ -43,7 +46,7 @@
     pruned-ouroboros-consensus.url = "github:angerman/ouroboros-consensus?ref=angerman/pruned-immutabledb";
     pruned-ouroboros-consensus.flake = false;
 
-    cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-10.3.0.0";
+    cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-10.15.1.0";
     cardano-cli.flake = false;
 
     cardano-addresses.url = "github:IntersectMBO/cardano-addresses?ref=4.0.0";
@@ -769,6 +772,75 @@ index 3aeb0e5..bea0ac9 100644
           ];
         };
 
+        # cardano-node 10.7.0 pre-release
+        cardanoNodePrePkg = luites-patches: pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc966";
+          src = inputs.cardano-node-pre;
+
+          cabalProjectLocal = ''
+          package cardano-node
+            flags: -systemd
+          package cardano-tracer
+            flags: -systemd
+          '';
+
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://chap.intersectmbo.org/" = inputs.CHaP;
+          };
+          modules = [({
+            packages.cardano-node.flags.systemd = false;
+            packages.cardano-tracer.flags.systemd = false;
+          })
+          ({ lib, ... }:
+            lib.mkIf luites-patches { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
+            "cardano-ledger-allegra"
+            "cardano-ledger-alonzo"
+            "cardano-ledger-babbage"
+            "cardano-ledger-conway"
+            "cardano-ledger-core"
+            "cardano-ledger-mary"
+            "cardano-ledger-shelley"
+            "free"
+            "ouroboros-consensus-cardano"
+            "set-algebra"
+            "small-steps"
+            "sop-core"
+          ])); })
+          ({ lib, config, ... }:
+            lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
+            reinstallableLibGhc = false;
+          })
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.cardano-node.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-lmdb}/lib"
+            ];
+            packages.cardano-cli.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-lmdb}/lib"
+            ];
+            packages.cardano-submit-api.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-lmdb}/lib"
+            ];
+          })
+          ];
+        };
+
         # Pruned ImmutableDB variant of cardano-node.
         # Uses angerman/cardano-node (pruned-mode-mithril) as source, and overrides
         # ouroboros-consensus with the pruned-immutabledb branch via source-repository-package.
@@ -1146,6 +1218,33 @@ index 3aeb0e5..bea0ac9 100644
             cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
 
+        # cardano-node 10.7.0 pre-release builds
+        cardanoNodePrePackages.packages =
+          let node = pkgs: map (exe: (cardanoNodePrePkg false pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+                "cardano-node" "cardano-submit-api"
+              ]
+              ++ [
+                (cardanoCliPkg pkgs).hsPkgs.cardano-cli.components.exes.cardano-cli
+                (cardanoAddressesPkg pkgs).hsPkgs.cardano-addresses.components.exes.cardano-address
+                (bech32Pkgs pkgs).hsPkgs.bech32.components.exes.bech32
+              ];
+              pkg = comps: pkgs.packaging.asZip {
+                name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
+                  comp.stdenv.hostPlatform.system
+                  "cardano-node-pre"
+                  comp.version
+                  comp.src.origSrc.shortRev
+                ];
+              } comps;
+          in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+            cardano-tools-pre = pkg (node pkgs);
+          } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+            cardano-tools-pre-static       = pkg (node pkgs.pkgsCross.musl64);
+            cardano-tools-pre-static-arm64 = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
+            cardano-tools-pre-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
+            cardano-tools-pre-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
+          };
+
         # Pruned ImmutableDB variant — only cardano-node and cardano-submit-api
         # (cardano-cli, cardano-addresses, bech32 are unaffected by pruning patches)
         prunedCardanoNodePackages.packages =
@@ -1373,7 +1472,7 @@ index 3aeb0e5..bea0ac9 100644
             #dbSyncPackages
             #ogmiosPackages  -- ogmios is pinned to GHC 8.10.7 which haskell.nix no longer supports
             #encoinsPackages -- encoins is pinned to GHC 8.10.7 which haskell.nix no longer supports
-            cardanoNodePackages prunedCardanoNodePackages
+            cardanoNodePackages cardanoNodePrePackages prunedCardanoNodePackages
             # nixToolsPackages nixToolsPackagesNoIfd
             mithrilPackages cabalInstallPackages ]
       )
