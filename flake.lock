@@ -879,6 +879,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1759070547,
+        "narHash": "sha256-JVZl8NaVRYb0+381nl7LvPE+A774/dRpif01FKLrYFQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "647e5c14cbd5067f44ac86b74f014962df460840",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "647e5c14cbd5067f44ac86b74f014962df460840",
+        "type": "github"
+      }
+    },
     "ogmios": {
       "flake": false,
       "locked": {
@@ -968,10 +984,7 @@
         "kupo": "kupo",
         "mithril": "mithril",
         "nix-tools": "nix-tools",
-        "nixpkgs": [
-          "haskellNix",
-          "nixpkgs-unstable"
-        ],
+        "nixpkgs": "nixpkgs_2",
         "ogmios": "ogmios",
         "pruned-cardano-node": "pruned-cardano-node",
         "pruned-ouroboros-consensus": "pruned-ouroboros-consensus",

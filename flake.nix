@@ -15,8 +15,9 @@
       flake = false;
     };
     haskellNix.inputs.iserv-proxy.follows = "iserv-proxy";
-    # for caching you want to follow haskell.nix's nixpkgs-unstable pins.
-    nixpkgs.follows = "haskellNix/nixpkgs-unstable";
+    # Pin nixpkgs independently — haskell.nix's nixpkgs-unstable dropped
+    # ghc943 which breaks the bootstrap overlay.
+    nixpkgs.url = "github:NixOS/nixpkgs/647e5c14cbd5067f44ac86b74f014962df460840";
 
     kupo.url = "github:CardanoSolutions/kupo?ref=v2.7";
     kupo.flake = false;
