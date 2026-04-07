@@ -648,11 +648,11 @@
     "hydra": {
       "flake": false,
       "locked": {
-        "lastModified": 1760965524,
-        "narHash": "sha256-jXkVF9xakAEzirY6MLDqpEqRFmK/a28QHWgteDG6We0=",
+        "lastModified": 1775551498,
+        "narHash": "sha256-om8BVKDhiB61JrVrklAUqIa2ayCw5YJlCFhvXHGCTgI=",
         "owner": "input-output-hk",
         "repo": "hydra",
-        "rev": "899aefd341789ac0fbcf8c22a9bdbfcc83329b5b",
+        "rev": "2bb200e4241aafba7e3b89d41a52b07355a3319e",
         "type": "github"
       },
       "original": {
