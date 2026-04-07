@@ -302,6 +302,22 @@
         "type": "github"
       }
     },
+    "hackage": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1762303154,
+        "narHash": "sha256-tgftn5snI3KZV9/DWH6dhKDcc8XDdVfA2bRdZzsiUIQ=",
+        "owner": "input-output-hk",
+        "repo": "hackage.nix",
+        "rev": "382f79a08090f4082c4d2e608e5330ddb957b1ff",
+        "type": "github"
+      },
+      "original": {
+        "owner": "input-output-hk",
+        "repo": "hackage.nix",
+        "type": "github"
+      }
+    },
     "hackage-for-stackage": {
       "flake": false,
       "locked": {
@@ -335,22 +351,6 @@
         "type": "github"
       }
     },
-    "hackageNix": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1775553119,
-        "narHash": "sha256-VPBqsBZU8KoNLLppmU6Z+AlldY8mJ3zhlyKgyeCu5x8=",
-        "owner": "input-output-hk",
-        "repo": "hackage.nix",
-        "rev": "2dc68a33e96ea7adc9e720bd332e108346ef9ada",
-        "type": "github"
-      },
-      "original": {
-        "owner": "input-output-hk",
-        "repo": "hackage.nix",
-        "type": "github"
-      }
-    },
     "haskellNix": {
       "inputs": {
         "HTTP": "HTTP",
@@ -359,9 +359,7 @@
         "cabal-36": "cabal-36",
         "cardano-shell": "cardano-shell",
         "flake-compat": "flake-compat",
-        "hackage": [
-          "hackageNix"
-        ],
+        "hackage": "hackage",
         "hackage-for-stackage": "hackage-for-stackage",
         "hackage-internal": "hackage-internal",
         "hls": "hls",
@@ -961,7 +959,6 @@
         "db-sync": "db-sync",
         "encoins": "encoins",
         "flake-utils": "flake-utils",
-        "hackageNix": "hackageNix",
         "haskellNix": "haskellNix",
         "hydra": "hydra",
         "iohkNix": "iohkNix",
