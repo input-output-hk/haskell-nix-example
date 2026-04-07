@@ -326,9 +326,6 @@
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
           };
-          sha256map = {
-            "https://github.com/google/proto-lens"."20de5227947b0c37dd6852dcc6f2db1cd5889cee" = "05k5c5z8r1nxk8d10gkfdsasx3cfzby6bfnvcpyb4lr3rkd18ijm";
-          };
           modules = [{
             # packages.double-conversion.ghcOptions = [
             #   # stop putting U __gxx_personality_v0 into the library!
@@ -697,6 +694,25 @@ index 3aeb0e5..bea0ac9 100644
           }
           ];
         };
+        # Fetch proto-lens with submodules and fix symlinks (same workaround
+        # as cardano-node upstream — the CHaP-embedded hash is stale).
+        protoLensSrc = pkgs.fetchgit {
+          url = "https://github.com/google/proto-lens";
+          rev = "20de5227947b0c37dd6852dcc6f2db1cd5889cee";
+          sha256 = "sha256-VUYU2swjU7L8Zdu6Zfz6jo2ulW5uPhAamt2GjH5hZRY=";
+          fetchSubmodules = true;
+        };
+        fixProtoLensSrc = pkgs.runCommand "proto-lens-fixed" {} ''
+          mkdir -p $out
+          cp -a ${protoLensSrc}/. $out/
+          chmod -R +w $out
+          rm -rf $out/proto-lens/proto-lens-imports/google
+          cp -r ${protoLensSrc}/google/protobuf/src/google $out/proto-lens/proto-lens-imports/
+          rm -rf $out/proto-lens-protobuf-types/proto-src
+          cp -r ${protoLensSrc}/google/protobuf/src $out/proto-lens-protobuf-types/proto-src
+          chmod -R -w $out
+        '';
+
         cardanoNodePkg = luites-patches: pkgs: pkgs.haskell-nix.project' {
           compiler-nix-name = "ghc966";
           src = inputs.cardano-node;
@@ -712,6 +728,7 @@ index 3aeb0e5..bea0ac9 100644
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://chap.intersectmbo.org/" = inputs.CHaP;
+            "https://github.com/google/proto-lens/20de5227947b0c37dd6852dcc6f2db1cd5889cee" = fixProtoLensSrc;
           };
           modules = [({
             # packages.double-conversion.ghcOptions = [
@@ -793,6 +810,7 @@ index 3aeb0e5..bea0ac9 100644
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://chap.intersectmbo.org/" = inputs.CHaP;
+            "https://github.com/google/proto-lens/20de5227947b0c37dd6852dcc6f2db1cd5889cee" = fixProtoLensSrc;
           };
           modules = [({
             packages.cardano-node.flags.systemd = false;
