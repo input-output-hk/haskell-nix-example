@@ -324,6 +324,9 @@
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
           };
+          sha256map = {
+            "https://github.com/google/proto-lens"."20de5227947b0c37dd6852dcc6f2db1cd5889cee" = "05k5c5z8r1nxk8d10gkfdsasx3cfzby6bfnvcpyb4lr3rkd18ijm";
+          };
           modules = [{
             # packages.double-conversion.ghcOptions = [
             #   # stop putting U __gxx_personality_v0 into the library!
