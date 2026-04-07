@@ -5,11 +5,11 @@
     flake-utils.url = "github:numtide/flake-utils";
     # Pin to the same haskell.nix that cardano-node 10.6.3 uses.
     haskellNix.url = "github:input-output-hk/haskell.nix?rev=ef52c36b9835c77a255befe2a20075ba71e3bfab";
-    #hackageNix = {
-    #  url = "github:input-output-hk/hackage.nix";
-    #  flake = false;
-    #};
-    #haskellNix.inputs.hackage.follows = "hackageNix";
+    hackageNix = {
+      url = "github:input-output-hk/hackage.nix";
+      flake = false;
+    };
+    haskellNix.inputs.hackage.follows = "hackageNix";
 
     iserv-proxy = {
       url = "github:stable-haskell/iserv-proxy?ref=iserv-syms";
@@ -804,6 +804,7 @@ index 3aeb0e5..bea0ac9 100644
             flags: -systemd
           package cardano-tracer
             flags: -systemd
+          constraints: QuickCheck < 2.17
           '';
 
           inputMap = {
