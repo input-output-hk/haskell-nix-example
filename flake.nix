@@ -1265,8 +1265,9 @@ index 3aeb0e5..bea0ac9 100644
           } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
             cardano-tools-pre-static       = pkg (node pkgs.pkgsCross.musl64);
             cardano-tools-pre-static-arm64 = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
-            cardano-tools-pre-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
-            cardano-tools-pre-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
+            # Windows cross disabled for 10.7.0 pre-release (Win32-network version conflict)
+            # cardano-tools-pre-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
+            # cardano-tools-pre-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
 
         # Pruned ImmutableDB variant — only cardano-node and cardano-submit-api
