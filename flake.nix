@@ -25,7 +25,7 @@
     ogmios.url = "github:CardanoSolutions/ogmios?rev=199daf67062e7c9efa735a0ba7d80d49108a56a0";
     ogmios.flake = false;
 
-    hydra.url = "github:input-output-hk/hydra";
+    hydra.url = "github:input-output-hk/hydra?rev=899aefd341789ac0fbcf8c22a9bdbfcc83329b5b";
     hydra.flake = false;
 
     db-sync.url = "github:input-output-hk/cardano-db-sync?ref=13.1.0.2";
