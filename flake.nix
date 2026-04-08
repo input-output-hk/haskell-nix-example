@@ -133,6 +133,7 @@
                 postFixup = "";
               });
               static-openssl = (final.openssl.override { static = true; });
+              static-ncurses = final.ncurses.override { enableStatic = true; };
               static-zlib = final.zlib.override { shared = false; };
               static-pcre = final.pcre.override { shared = false; };
               static-lmdb = final.lmdb.overrideDerivation (old: {
@@ -781,6 +782,7 @@ index 3aeb0e5..bea0ac9 100644
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
                 "-L${lib.getLib static-lmdb}/lib"
+                "-L${lib.getLib static-ncurses}/lib"
             ];
             packages.cardano-submit-api.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
@@ -852,6 +854,7 @@ index 3aeb0e5..bea0ac9 100644
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
                 "-L${lib.getLib static-lmdb}/lib"
+                "-L${lib.getLib static-ncurses}/lib"
             ];
             packages.cardano-submit-api.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
@@ -981,6 +984,7 @@ index 3aeb0e5..bea0ac9 100644
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-ncurses}/lib"
             ];
           })
           ];
