@@ -1,0 +1,157 @@
+diff --git a/src/Cardano/Ledger/Mary/Value.hs b/src/Cardano/Ledger/Mary/Value.hs
+index 1893f40..32b083f 100644
+--- a/src/Cardano/Ledger/Mary/Value.hs
++++ b/src/Cardano/Ledger/Mary/Value.hs
+@@ -62,7 +62,7 @@ import Cardano.Ledger.Binary.Coders (
+ import Cardano.Ledger.Binary.Version (natVersion)
+ import Cardano.Ledger.Coin (Coin (..), integerToWord64)
+ import Cardano.Ledger.Compactible (Compactible (..))
+-import Cardano.Ledger.Crypto (Crypto (ADDRHASH))
++import Cardano.Ledger.Crypto (Crypto (ADDRHASH), StandardCrypto)
+ import Cardano.Ledger.Shelley.Scripts (ScriptHash (..))
+ import Cardano.Ledger.Val (Val (..))
+ import Control.DeepSeq (NFData (..), deepseq, rwhnf)
+@@ -159,6 +159,8 @@ newtype MultiAsset c = MultiAsset (Map (PolicyID c) (Map AssetName Integer))
+   deriving (Show, Generic, ToJSON, EncCBOR)
+
+ instance Crypto c => Eq (MultiAsset c) where
++  {-# SPECIALISE instance Eq (MultiAsset StandardCrypto) #-}
++  {-# INLINE (==) #-}
+   MultiAsset x == MultiAsset y = pointWise (pointWise (==)) x y
+
+ instance NFData (MultiAsset cypto) where
+@@ -178,6 +180,7 @@ instance Group (MultiAsset c) where
+     MultiAsset (canonicalMap (canonicalMap ((-1 :: Integer) *)) m)
+
+ instance Crypto c => DecCBOR (MultiAsset c) where
++  {-# SPECIALISE instance DecCBOR (MultiAsset StandardCrypto) #-}
+   decCBOR = decodeMultiAsset decodeIntegerBounded64
+
+ -- | The Value representing MultiAssets
+@@ -185,6 +188,8 @@ data MaryValue c = MaryValue !Coin !(MultiAsset c)
+   deriving (Show, Generic)
+
+ instance Crypto c => Eq (MaryValue c) where
++  {-# SPECIALIZE instance Eq (MaryValue StandardCrypto) #-}
++  {-# INLINE (==) #-}
+   x == y = pointwise (==) x y
+
+ instance NFData (MaryValue c) where
+@@ -214,6 +219,7 @@ instance Inject Coin (MaryValue c) where
+ -- Make the Val instance of MaryValue
+
+ instance Crypto c => Val (MaryValue c) where
++  {-# SPECIALIZE instance Val (MaryValue StandardCrypto) #-}
+   s <×> MaryValue c (MultiAsset m) =
+     MaryValue
+       (s <×> c)
+@@ -285,7 +291,7 @@ roundupBytesToWords b = quot (b + wordLength - 1) wordLength
+
+ -- ==============================================================
+ -- CBOR
+-
++{-# SPECIALISE decodeMaryValue :: forall s. Decoder s (MaryValue StandardCrypto) #-}
+ decodeMaryValue ::
+   forall c s.
+   Crypto c =>
+@@ -300,6 +306,7 @@ decodeMaryValue = do
+     TypeListLenIndef -> decodeValuePair (toInteger <$> decodeWord64)
+     _ -> fail $ "MaryValue: expected array or int, got " ++ show tt
+
++-- XXX specialise
+ decodeValuePair ::
+   Crypto c =>
+   (forall t. Decoder t Integer) ->
+@@ -317,6 +324,7 @@ decodeValuePair decodeMultiAssetAmount =
+ --
+ -- In both cases MultiAsset cannot be too big for compact representation and it must not
+ -- contain empty Maps.
++{-# SPECIALISE decodeMultiAsset :: (forall t. Decoder t Integer) -> Decoder s (MultiAsset StandardCrypto) #-}
+ decodeMultiAsset :: Crypto c => (forall t. Decoder t Integer) -> Decoder s (MultiAsset c)
+ decodeMultiAsset decodeAmount = do
+   ma <-
+@@ -337,6 +345,7 @@ decodeMultiAsset decodeAmount = do
+       prune <$> decodeMap decCBOR (decodeMap decCBOR decodeAmount)
+
+ instance Crypto c => EncCBOR (MaryValue c) where
++  {-# SPECIALIZE instance EncCBOR (MaryValue StandardCrypto) #-}
+   encCBOR (MaryValue c ma@(MultiAsset m)) =
+     if Map.null m
+       then encCBOR c
+@@ -347,6 +356,7 @@ instance Crypto c => EncCBOR (MaryValue c) where
+             !> To ma
+
+ instance Crypto c => DecCBOR (MaryValue c) where
++  {-# SPECIALIZE instance DecCBOR (MaryValue StandardCrypto) #-}
+   decCBOR = decodeMaryValue
+
+ -- Note: we do not use `decodeInt64` from the cborg library here because the
+@@ -377,13 +387,16 @@ decodeIntegerBounded64 = do
+     maxval = fromIntegral (maxBound :: Int64)
+     minval = fromIntegral (minBound :: Int64)
+
++
+ -- ========================================================================
+ -- JSON
+
+ instance Crypto c => ToJSON (MaryValue c) where
++  {-# SPECIALISE instance ToJSON (MaryValue StandardCrypto) #-}
+   toJSON = object . toMaryValuePairs
+   toEncoding = Aeson.pairs . mconcat . toMaryValuePairs
+
++{-# SPECIALIZE toMaryValuePairs :: Aeson.KeyValue e a => MaryValue StandardCrypto -> [a] #-}
+ toMaryValuePairs :: Crypto c => Aeson.KeyValue e a => MaryValue c -> [a]
+ toMaryValuePairs (MaryValue l ps) =
+   [ "lovelace" .= l
+@@ -401,15 +414,18 @@ instance ToJSONKey AssetName where
+ -- This is used in the TxOut which stores the (CompactForm MaryValue).
+
+ instance Crypto c => Compactible (MaryValue c) where
++  {-# SPECIALISE instance Compactible (MaryValue StandardCrypto) #-}
+   newtype CompactForm (MaryValue c) = CompactValue (CompactValue c)
+     deriving (Eq, Typeable, Show, NoThunks, EncCBOR, DecCBOR, NFData)
+   toCompact x = CompactValue <$> to x
+   fromCompact (CompactValue x) = from x
+
+ instance Crypto c => EncCBOR (CompactValue c) where
++  {-# SPECIALISE instance EncCBOR (CompactValue StandardCrypto) #-}
+   encCBOR = encCBOR . from
+
+ instance Crypto c => DecCBOR (CompactValue c) where
++  {-# SPECIALISE instance DecCBOR (CompactValue StandardCrypto) #-}
+   decCBOR = do
+     v <- decodeMaryValue
+     case to v of
+@@ -430,6 +446,8 @@ instance NFData (CompactValue c) where
+   rnf = rwhnf
+
+ instance Crypto c => Eq (CompactValue c) where
++  {-# SPECIALISE instance Eq (CompactValue StandardCrypto) #-}
++  {-# INLINE (==) #-}
+   a == b = from a == from b
+
+ deriving via
+@@ -542,6 +560,7 @@ The decoding strategy is
+      into region E.
+  -}
+
++{-# SPECIALISE to :: MaryValue StandardCrypto -> Maybe (CompactValue StandardCrypto) #-}
+ to ::
+   forall c.
+   Crypto c =>
+@@ -678,6 +697,7 @@ isMultiAssetSmallEnough :: MultiAsset c -> Bool
+ isMultiAssetSmallEnough (MultiAsset ma) =
+   44 * M.getSum (foldMap' (M.Sum . length) ma) + 28 * length ma <= 65535
+
++{-# SPECIALISE representationSize :: [(PolicyID StandardCrypto, AssetName, Integer)] -> Int #-}
+ representationSize ::
+   forall c.
+   Crypto c =>
+@@ -696,6 +716,7 @@ representationSize xs = abcRegionSize + pidBlockSize + anameBlockSize
+     anameBlockSize =
+       Semigroup.getSum $ foldMap' (Semigroup.Sum . SBS.length . assetName) assetNames
+
++{-# SPECIALISE from :: CompactValue StandardCrypto -> MaryValue StandardCrypto #-}
+ from :: forall c. Crypto c => CompactValue c -> MaryValue c
+ from (CompactValueAdaOnly c) = MaryValue (fromCompact c) (MultiAsset Map.empty)
+ from (CompactValueMultiAsset c numAssets rep) =

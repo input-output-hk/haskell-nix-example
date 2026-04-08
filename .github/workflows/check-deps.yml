@@ -1,0 +1,57 @@
+name: Check Dependencies
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Run every 6 hours
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: with-kupo  # Check out the with-kupo branch
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Check for Updates
+        id: check
+        run: |
+          # Create new branch with timestamp
+          branch_name="deps-update-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b $branch_name
+
+          # Run the update check
+          make check-and-update-deps
+
+          # Check if there are changes
+          if git diff --quiet; then
+            echo "No updates needed"
+            exit 0
+          fi
+
+          # If we get here, there are changes to commit
+          git add flake.nix
+          git commit -m "chore: update to latest releases"
+          git push origin $branch_name
+
+          # Create PR
+          gh pr create \
+            --title "chore: update cardano dependencies" \
+            --body "Automated update of cardano-node and cardano-cli to their latest releases." \
+            --base with-kupo \
+            --head $branch_name
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

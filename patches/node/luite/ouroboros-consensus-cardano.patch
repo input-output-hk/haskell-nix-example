@@ -1,0 +1,157 @@
+diff --git a/src/ouroboros-consensus-cardano/Ouroboros/Consensus/Cardano/CanHardFork.hs b/src/ouroboros-consensus-cardano/Ouroboros/Consensus/Cardano/CanHardFork.hs
+index c90dd6e..d786e58 100644
+--- a/src/ouroboros-consensus-cardano/Ouroboros/Consensus/Cardano/CanHardFork.hs
++++ b/src/ouroboros-consensus-cardano/Ouroboros/Consensus/Cardano/CanHardFork.hs
+@@ -256,7 +256,8 @@ instance HasPartialLedgerConfig ByronBlock where
+ -------------------------------------------------------------------------------}
+
+ type CardanoHardForkConstraints c =
+-  ( TPraos.PraosCrypto c
++  ( c ~ StandardCrypto
++  , TPraos.PraosCrypto c
+   , Praos.PraosCrypto c
+   , TranslateProto (TPraos c) (Praos c)
+   , ShelleyCompatible (TPraos c) (ShelleyEra c)
+@@ -625,7 +626,7 @@ translateValidatedTxMaryToAlonzoWrapper ctxt = InjectValidatedTx $
+ -------------------------------------------------------------------------------}
+
+ translateLedgerStateAlonzoToBabbageWrapper ::
+-     (Praos.PraosCrypto c, TPraos.PraosCrypto c)
++     (c ~ StandardCrypto, Praos.PraosCrypto c, TPraos.PraosCrypto c)
+   => RequiringBoth
+        WrapLedgerConfig
+        (Translate LedgerState)
+@@ -647,7 +648,7 @@ translateLedgerStateAlonzoToBabbageWrapper =
+         }
+
+ translateTxAlonzoToBabbageWrapper ::
+-     (Praos.PraosCrypto c)
++     (c ~ StandardCrypto, Praos.PraosCrypto c)
+   => SL.TranslationContext (BabbageEra c)
+   -> InjectTx
+        (ShelleyBlock (TPraos c) (AlonzoEra c))
+@@ -662,7 +663,7 @@ translateTxAlonzoToBabbageWrapper ctxt = InjectTx $
+
+ translateValidatedTxAlonzoToBabbageWrapper ::
+      forall c.
+-     (Praos.PraosCrypto c)
++     (c ~ StandardCrypto, Praos.PraosCrypto c)
+   => SL.TranslationContext (BabbageEra c)
+   -> InjectValidatedTx
+        (ShelleyBlock (TPraos c) (AlonzoEra c))
+@@ -687,7 +688,7 @@ translateValidatedTxAlonzoToBabbageWrapper ctxt = InjectValidatedTx $
+ -------------------------------------------------------------------------------}
+
+ translateLedgerStateBabbageToConwayWrapper ::
+-     forall c. (Praos.PraosCrypto c)
++     forall c. (c ~ StandardCrypto, Praos.PraosCrypto c)
+   => RequiringBoth
+        WrapLedgerConfig
+        (Translate LedgerState)
+diff --git a/src/shelley/Ouroboros/Consensus/Shelley/Eras.hs b/src/shelley/Ouroboros/Consensus/Shelley/Eras.hs
+index 4a5bcf2..b805aba 100644
+--- a/src/shelley/Ouroboros/Consensus/Shelley/Eras.hs
++++ b/src/shelley/Ouroboros/Consensus/Shelley/Eras.hs
+@@ -247,7 +247,7 @@ instance (SL.PraosCrypto c, DSignable c (Hash c EraIndependentTxBody))
+
+   getConwayEraGovDict = defaultGetConwayEraGovDict
+
+-instance (Praos.PraosCrypto c) => ShelleyBasedEra (BabbageEra c) where
++instance (c ~ StandardCrypto, Praos.PraosCrypto c) => ShelleyBasedEra (BabbageEra c) where
+   shelleyBasedEraName _ = "Babbage"
+   applyShelleyBasedTx = applyAlonzoBasedTx
+
+diff --git a/src/shelley/Ouroboros/Consensus/Shelley/HFEras.hs b/src/shelley/Ouroboros/Consensus/Shelley/HFEras.hs
+index 0cb928d..5fb051a 100644
+--- a/src/shelley/Ouroboros/Consensus/Shelley/HFEras.hs
++++ b/src/shelley/Ouroboros/Consensus/Shelley/HFEras.hs
+@@ -1,6 +1,7 @@
+ {-# LANGUAGE FlexibleInstances     #-}
+ {-# LANGUAGE MultiParamTypeClasses #-}
+ {-# LANGUAGE UndecidableInstances  #-}
++{-# LANGUAGE TypeFamilies          #-}
+ {-# OPTIONS_GHC -Wno-orphans #-}
+
+ -- | Hard fork eras.
+@@ -76,11 +77,11 @@ instance
+ -- Praos/Babbage still goes through the forecast for TPraos. Once this is
+ -- addressed, we could remove this instance.
+ instance
+-  (Praos.PraosCrypto c, TPraos.PraosCrypto c) =>
++  (c ~ StandardCrypto, Praos.PraosCrypto c, TPraos.PraosCrypto c) =>
+   ShelleyCompatible (TPraos c) (BabbageEra c)
+
+ instance
+-  (Praos.PraosCrypto c) => ShelleyCompatible (Praos c) (BabbageEra c)
++  (c ~ StandardCrypto, Praos.PraosCrypto c) => ShelleyCompatible (Praos c) (BabbageEra c)
+
+ -- This instance is required since the ledger view forecast function for
+ -- Praos/Conway still goes through the forecast for TPraos. Once this is
+diff --git a/src/shelley/Ouroboros/Consensus/Shelley/Ledger/Mempool.hs b/src/shelley/Ouroboros/Consensus/Shelley/Ledger/Mempool.hs
+index b103555..527530b 100644
+--- a/src/shelley/Ouroboros/Consensus/Shelley/Ledger/Mempool.hs
++++ b/src/shelley/Ouroboros/Consensus/Shelley/Ledger/Mempool.hs
+@@ -127,12 +127,16 @@ perTxOverhead = 4
+
+ instance ShelleyCompatible proto era
+       => LedgerSupportsMempool (ShelleyBlock proto era) where
++  {-# INLINE txInvariant #-}
+   txInvariant = const True
+
++  {-# INLINE applyTx #-}
+   applyTx = applyShelleyTx
+
++  {-# INLINE reapplyTx #-}
+   reapplyTx = reapplyShelleyTx
+
++  {-# INLINE txsMaxBytes #-}
+   txsMaxBytes TickedShelleyLedgerState { tickedShelleyLedgerState = shelleyState } =
+
+       -- `maxBlockBodySize` is expected to be bigger than `fixedBlockBodyOverhead`
+@@ -140,12 +144,15 @@ instance ShelleyCompatible proto era
+     where
+       maxBlockBodySize = getPParams shelleyState ^. ppMaxBBSizeL
+
++  {-# INLINE txInBlockSize #-}
+   txInBlockSize (ShelleyTx _ tx) = txSize + perTxOverhead
+     where
+       txSize = fromIntegral $ tx ^. sizeTxF
+
++  {-# INLINE txForgetValidated #-}
+   txForgetValidated (ShelleyValidatedTx txid vtx) = ShelleyTx txid (SL.extractTx vtx)
+
++{-# INLINE mkShelleyTx #-}
+ mkShelleyTx :: forall era proto. ShelleyBasedEra era => Tx era -> GenTx (ShelleyBlock proto era)
+ mkShelleyTx tx = ShelleyTx (SL.txIdTxBody @era (tx ^. bodyTxL)) tx
+
+@@ -214,6 +221,7 @@ instance Show (GenTxId (ShelleyBlock proto era)) where
+   Applying transactions
+ -------------------------------------------------------------------------------}
+
++{-# INLINE applyShelleyTx #-}
+ applyShelleyTx :: forall era proto.
+      ShelleyBasedEra era
+   => LedgerConfig (ShelleyBlock proto era)
+@@ -240,6 +248,7 @@ applyShelleyTx cfg wti slot (ShelleyTx _ tx) st = do
+   where
+     innerSt = tickedShelleyLedgerState st
+
++{-# INLINE reapplyShelleyTx #-}
+ reapplyShelleyTx ::
+      ShelleyBasedEra era
+   => LedgerConfig (ShelleyBlock proto era)
+@@ -262,12 +271,14 @@ reapplyShelleyTx cfg slot vgtx st = do
+     innerSt = tickedShelleyLedgerState st
+
+ -- | The lens combinator
++{-# INLINE set #-}
+ set ::
+      (forall f. Applicative f => (a -> f b) -> s -> f t)
+   -> b -> s -> t
+ set lens inner outer =
+     runIdentity $ lens (\_ -> Identity inner) outer
+
++{-# INLINE theLedgerLens #-}
+ theLedgerLens ::
+      Functor f
+   => (SL.LedgerState era -> f (SL.LedgerState era))
