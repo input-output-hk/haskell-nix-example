@@ -742,8 +742,7 @@ index 3aeb0e5..bea0ac9 100644
             packages.cardano-node.flags.systemd = false;
             packages.cardano-tracer.flags.systemd = false;
           })
-          ({ lib, ... }:
-            lib.mkIf luites-patches { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
+          ] ++ lib.optional luites-patches ({ lib, ... }: { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
             "cardano-ledger-allegra"
             "cardano-ledger-alonzo"
             "cardano-ledger-babbage"
@@ -756,7 +755,7 @@ index 3aeb0e5..bea0ac9 100644
             "set-algebra"
             "small-steps"
             "sop-core"
-          ])); })
+          ])); }) ++ [
           # Fix compilation with newer ghc versions
           ({ lib, config, ... }:
             lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
@@ -818,8 +817,7 @@ index 3aeb0e5..bea0ac9 100644
             packages.cardano-node.flags.systemd = false;
             packages.cardano-tracer.flags.systemd = false;
           })
-          ({ lib, ... }:
-            lib.mkIf luites-patches { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
+          ] ++ lib.optional luites-patches ({ lib, ... }: { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
             "cardano-ledger-allegra"
             "cardano-ledger-alonzo"
             "cardano-ledger-babbage"
@@ -832,7 +830,7 @@ index 3aeb0e5..bea0ac9 100644
             "set-algebra"
             "small-steps"
             "sop-core"
-          ])); })
+          ])); }) ++ [
           ({ lib, config, ... }:
             lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
             reinstallableLibGhc = false;
@@ -908,8 +906,7 @@ index 3aeb0e5..bea0ac9 100644
             packages.cardano-node.flags.systemd = false;
             packages.cardano-tracer.flags.systemd = false;
           })
-          ({ lib, ... }:
-            lib.mkIf luites-patches { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
+          ] ++ lib.optional luites-patches ({ lib, ... }: { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
             "cardano-ledger-allegra"
             "cardano-ledger-alonzo"
             "cardano-ledger-babbage"
@@ -922,7 +919,7 @@ index 3aeb0e5..bea0ac9 100644
             "set-algebra"
             "small-steps"
             "sop-core"
-          ])); })
+          ])); }) ++ [
           ({ lib, config, ... }:
             lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
             reinstallableLibGhc = false;
