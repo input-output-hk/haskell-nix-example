@@ -3,8 +3,7 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    # Pin to the same haskell.nix that cardano-node 10.6.3 uses.
-    haskellNix.url = "github:input-output-hk/haskell.nix?rev=ef52c36b9835c77a255befe2a20075ba71e3bfab";
+    haskellNix.url = "github:input-output-hk/haskell.nix";
     hackageNix = {
       url = "github:input-output-hk/hackage.nix";
       flake = false;
