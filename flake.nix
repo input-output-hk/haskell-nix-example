@@ -713,7 +713,7 @@ index 3aeb0e5..bea0ac9 100644
           chmod -R -w $out
         '';
 
-        cardanoNodePkg = luites-patches: pkgs: pkgs.haskell-nix.project' {
+        cardanoNodePkg = pkgs: pkgs.haskell-nix.project' {
           compiler-nix-name = "ghc966";
           src = inputs.cardano-node;
 
@@ -742,20 +742,6 @@ index 3aeb0e5..bea0ac9 100644
             packages.cardano-node.flags.systemd = false;
             packages.cardano-tracer.flags.systemd = false;
           })
-          ] ++ lib.optional luites-patches ({ lib, ... }: { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
-            "cardano-ledger-allegra"
-            "cardano-ledger-alonzo"
-            "cardano-ledger-babbage"
-            "cardano-ledger-conway"
-            "cardano-ledger-core"
-            "cardano-ledger-mary"
-            "cardano-ledger-shelley"
-            "free"
-            "ouroboros-consensus-cardano"
-            "set-algebra"
-            "small-steps"
-            "sop-core"
-          ])); }) ++ [
           # Fix compilation with newer ghc versions
           ({ lib, config, ... }:
             lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
@@ -795,7 +781,7 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         # cardano-node 10.7.0 pre-release
-        cardanoNodePrePkg = luites-patches: pkgs: pkgs.haskell-nix.project' {
+        cardanoNodePrePkg = pkgs: pkgs.haskell-nix.project' {
           compiler-nix-name = "ghc966";
           src = inputs.cardano-node-pre;
 
@@ -817,20 +803,6 @@ index 3aeb0e5..bea0ac9 100644
             packages.cardano-node.flags.systemd = false;
             packages.cardano-tracer.flags.systemd = false;
           })
-          ] ++ lib.optional luites-patches ({ lib, ... }: { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
-            "cardano-ledger-allegra"
-            "cardano-ledger-alonzo"
-            "cardano-ledger-babbage"
-            "cardano-ledger-conway"
-            "cardano-ledger-core"
-            "cardano-ledger-mary"
-            "cardano-ledger-shelley"
-            "free"
-            "ouroboros-consensus-cardano"
-            "set-algebra"
-            "small-steps"
-            "sop-core"
-          ])); }) ++ [
           ({ lib, config, ... }:
             lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
             reinstallableLibGhc = false;
@@ -868,7 +840,7 @@ index 3aeb0e5..bea0ac9 100644
         # Pruned ImmutableDB variant of cardano-node.
         # Uses angerman/cardano-node (pruned-mode-mithril) as source, and overrides
         # ouroboros-consensus with the pruned-immutabledb branch via source-repository-package.
-        prunedCardanoNodePkg = luites-patches: pkgs: pkgs.haskell-nix.project' {
+        prunedCardanoNodePkg = pkgs: pkgs.haskell-nix.project' {
           compiler-nix-name = "ghc966";
           src = inputs.pruned-cardano-node;
 
@@ -906,20 +878,6 @@ index 3aeb0e5..bea0ac9 100644
             packages.cardano-node.flags.systemd = false;
             packages.cardano-tracer.flags.systemd = false;
           })
-          ] ++ lib.optional luites-patches ({ lib, ... }: { packages = (__listToAttrs (map (pkg: { name = "${pkg}"; value = { patches = [ ./patches/node/luite/${pkg}.patch ]; }; }) [
-            "cardano-ledger-allegra"
-            "cardano-ledger-alonzo"
-            "cardano-ledger-babbage"
-            "cardano-ledger-conway"
-            "cardano-ledger-core"
-            "cardano-ledger-mary"
-            "cardano-ledger-shelley"
-            "free"
-            "ouroboros-consensus-cardano"
-            "set-algebra"
-            "small-steps"
-            "sop-core"
-          ])); }) ++ [
           ({ lib, config, ... }:
             lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
             reinstallableLibGhc = false;
@@ -1217,7 +1175,7 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         cardanoNodePackages.packages =
-          let node = pkgs: map (exe: (cardanoNodePkg false pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+          let node = pkgs: map (exe: (cardanoNodePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) [
                 "cardano-node" "cardano-submit-api"
               ]
               ++ [
@@ -1244,7 +1202,7 @@ index 3aeb0e5..bea0ac9 100644
 
         # cardano-node 10.7.0 pre-release builds
         cardanoNodePrePackages.packages =
-          let node = pkgs: map (exe: (cardanoNodePrePkg false pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+          let node = pkgs: map (exe: (cardanoNodePrePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) [
                 "cardano-node" "cardano-submit-api"
               ]
               ++ [
@@ -1273,7 +1231,7 @@ index 3aeb0e5..bea0ac9 100644
         # Pruned ImmutableDB variant — only cardano-node and cardano-submit-api
         # (cardano-cli, cardano-addresses, bech32 are unaffected by pruning patches)
         prunedCardanoNodePackages.packages =
-          let node = pkgs: map (exe: (prunedCardanoNodePkg false pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+          let node = pkgs: map (exe: (prunedCardanoNodePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) [
                 "cardano-node" "cardano-submit-api"
               ];
               pkg = comps: pkgs.packaging.asZip {
