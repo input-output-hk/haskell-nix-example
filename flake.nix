@@ -326,7 +326,14 @@
             "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
             "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
           };
-          modules = [{
+          modules = [
+          # proto-lens-protobuf-types needs protoc at build time (matches
+          # upstream hydra's nix/hydra/project.nix).
+          ({ pkgs, ... }: {
+            packages.proto-lens-protobuf-types.components.library.build-tools =
+              [ pkgs.buildPackages.protobuf ];
+          })
+          {
             # packages.double-conversion.ghcOptions = [
             #   # stop putting U __gxx_personality_v0 into the library!
             #   "-optcxx-fno-rtti" "-optcxx-fno-exceptions"
@@ -799,7 +806,14 @@ index 3aeb0e5..bea0ac9 100644
             "https://chap.intersectmbo.org/" = inputs.CHaP;
             "https://github.com/google/proto-lens/20de5227947b0c37dd6852dcc6f2db1cd5889cee" = fixProtoLensSrc;
           };
-          modules = [({
+          modules = [
+          # proto-lens-protobuf-types needs protoc at build time (matches
+          # upstream cardano-node's nix/haskell.nix).
+          ({ pkgs, ... }: {
+            packages.proto-lens-protobuf-types.components.library.build-tools =
+              [ pkgs.buildPackages.protobuf ];
+          })
+          ({
             packages.cardano-node.flags.systemd = false;
             packages.cardano-tracer.flags.systemd = false;
           })
