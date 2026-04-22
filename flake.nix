@@ -133,6 +133,11 @@
               });
               static-openssl = (final.openssl.override { static = true; });
               static-ncurses = final.ncurses.override { enableStatic = true; };
+              static-snappy = final.snappy.overrideAttrs (old: {
+                cmakeFlags = (builtins.filter (f: f != "-DBUILD_SHARED_LIBS=ON") (old.cmakeFlags or [])) ++ [
+                  "-DBUILD_SHARED_LIBS=OFF"
+                ];
+              });
               static-zlib = final.zlib.override { shared = false; };
               static-pcre = final.pcre.override { shared = false; };
               static-lmdb = final.lmdb.overrideDerivation (old: {
@@ -327,10 +332,12 @@
             "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
           };
           modules = [
-          # proto-lens-protobuf-types needs protoc at build time (matches
+          # proto-lens packages need protoc at build time (matches
           # upstream hydra's nix/hydra/project.nix).
           ({ pkgs, ... }: {
             packages.proto-lens-protobuf-types.components.library.build-tools =
+              [ pkgs.buildPackages.protobuf ];
+            packages.proto-lens-etcd.components.library.build-tools =
               [ pkgs.buildPackages.protobuf ];
           })
           {
@@ -829,6 +836,7 @@ index 3aeb0e5..bea0ac9 100644
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
                 "-L${lib.getLib static-lmdb}/lib"
+                "-L${lib.getLib static-snappy}/lib"
             ];
             packages.cardano-cli.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
