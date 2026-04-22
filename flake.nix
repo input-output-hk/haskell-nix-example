@@ -103,6 +103,13 @@
             iohkNix.overlays.utils
             (import ./packaging.nix)
             (final: prev: {
+              # kyua signal-handling tests are broken inside the Nix sandbox on
+              # aarch64-darwin (SIGTERM delivered as SIGABRT, handlers never fire).
+              # atf depends on kyua for its test suite, and libiconv depends on atf,
+              # so the failure cascades through the entire darwin stdenv.  Disable
+              # atf's tests to break the cascade.
+              atf = prev.atf.overrideAttrs { doCheck = false; };
+
               static-libsodium-vrf = final.libsodium-vrf.overrideDerivation (old: {
                 configureFlags = old.configureFlags ++ [ "--disable-shared" ];
               });
