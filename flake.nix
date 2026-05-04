@@ -154,6 +154,30 @@
                   rm -fR $lib/lib/*.so
                 '';
               });
+            }
+            # cardano-node 10.7.0+ pulls in ouroboros-consensus:lsm, which depends
+            # on lsm-tree → snappy-c (extra-libraries: snappy) and blockio-uring
+            # (extra-libraries: uring).  When linking the static musl cardano-node
+            # binary, ld -static needs libsnappy.a / liburing.a, but nixpkgs builds
+            # both as dynamic-only by default.  Force static for musl targets,
+            # matching upstream cardano-node's nix/pkgs.nix overlay.
+            // prev.lib.optionalAttrs prev.stdenv.hostPlatform.isMusl {
+              snappy = prev.snappy.overrideAttrs (old: {
+                cmakeFlags = map (f: if f == "-DBUILD_SHARED_LIBS=ON" then "-DBUILD_SHARED_LIBS=OFF" else f) (old.cmakeFlags or []);
+              });
+              # liburing always builds both .a and .so but upstream's postInstall
+              # keeps only one based on stdenv.hostPlatform.isStatic.  pkgsCross.musl64
+              # is musl-libc but not isStatic, so we'd lose the .a.  Replace the
+              # postInstall to drop only the .so files (force static), and still
+              # copy the example binaries to $bin (matching upstream's logic).
+              liburing = prev.liburing.overrideAttrs (old: {
+                postInstall = ''
+                  rm $out/lib/liburing*.so*
+                  for file in $(find ./examples -executable -type f); do
+                    install -Dm555 -t "$bin/bin" "$file"
+                  done
+                '';
+              });
             })
           ];
           # Also ensure we are using haskellNix config. Otherwise we won't be
