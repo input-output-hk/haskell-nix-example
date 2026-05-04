@@ -34,10 +34,10 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.6.4";
+    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.7.1";
     cardano-node.flake = false;
 
-    cardano-node-pre.url = "github:IntersectMBO/cardano-node?ref=10.7.1";
+    cardano-node-pre.url = "github:IntersectMBO/cardano-node?ref=11.0.0";
     cardano-node-pre.flake = false;
 
     # Pruned ImmutableDB variant (cardano-node + ouroboros-consensus with pruning support)
