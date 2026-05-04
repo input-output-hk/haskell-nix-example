@@ -813,6 +813,10 @@ index 3aeb0e5..bea0ac9 100644
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
                 "-L${lib.getLib static-lmdb}/lib"
+                # cardano-node 10.7.x links against snappy.  Force the static
+                # archive so the binary doesn't reference libsnappy.dylib from
+                # the nix store on darwin (matches cardanoNodePrePkg).
+                "-L${lib.getLib static-snappy}/lib"
             ];
             packages.cardano-cli.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
