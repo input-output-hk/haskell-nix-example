@@ -34,10 +34,10 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:IntersectMBO/cardano-node?ref=10.7.1";
+    cardano-node.url = "github:IntersectMBO/cardano-node?ref=11.0.1";
     cardano-node.flake = false;
 
-    cardano-node-pre.url = "github:IntersectMBO/cardano-node?ref=11.0.0";
+    cardano-node-pre.url = "github:IntersectMBO/cardano-node?ref=11.0.1";
     cardano-node-pre.flake = false;
 
     # Pruned ImmutableDB variant (cardano-node + ouroboros-consensus with pruning support)
@@ -839,7 +839,7 @@ index 3aeb0e5..bea0ac9 100644
           ];
         };
 
-        # cardano-node 10.7.0 pre-release
+        # cardano-node pre-release slot (currently tracking 11.0.1 — no newer pre-release available)
         cardanoNodePrePkg = pkgs: pkgs.haskell-nix.project' {
           compiler-nix-name = "ghc966";
           src = inputs.cardano-node-pre;
@@ -1269,7 +1269,7 @@ index 3aeb0e5..bea0ac9 100644
             cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
 
-        # cardano-node 10.7.0 pre-release builds
+        # cardano-node pre-release builds (tracking 11.0.1)
         cardanoNodePrePackages.packages =
           let node = pkgs: map (exe: (cardanoNodePrePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) [
                 "cardano-node" "cardano-submit-api"
@@ -1292,7 +1292,7 @@ index 3aeb0e5..bea0ac9 100644
           } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
             cardano-tools-pre-static       = pkg (node pkgs.pkgsCross.musl64);
             cardano-tools-pre-static-arm64 = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
-            # Windows cross disabled for 10.7.0 pre-release (Win32-network version conflict)
+            # Windows cross disabled for pre-release (Win32-network version conflict; carried over from 10.7.0 era — revisit when bumping)
             # cardano-tools-pre-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
             # cardano-tools-pre-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
