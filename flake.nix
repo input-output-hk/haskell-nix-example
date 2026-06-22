@@ -40,6 +40,16 @@
     cardano-node-pre.url = "github:IntersectMBO/cardano-node?ref=11.0.1";
     cardano-node-pre.flake = false;
 
+    # cardano-node leios-prototype slot — duplicated from -pre so -pre stays free
+    # for official pre-releases. The live magic-164 Leios testnet now requires
+    # 11.0.1-leios-prototype; this branch builds cardano-node 11.0.1.164 and its
+    # cabal.project SRP-pins the matching cardano-cli + cardano-api (where the
+    # Dijkstra ledger queries live) + cardano-ledger-dijkstra + ouroboros-consensus,
+    # so building this one tree yields the Dijkstra-capable cli too. Pinned to an
+    # exact commit because the leios-prototype integration branch moves daily.
+    cardano-node-leios.url = "github:IntersectMBO/cardano-node/7c357a5531cc3316e9f708f4465eb66db564d8aa";
+    cardano-node-leios.flake = false;
+
     # Pruned ImmutableDB variant (cardano-node + ouroboros-consensus with pruning support)
     pruned-cardano-node.url = "github:angerman/cardano-node?ref=angerman/pruned-mode-mithril";
     pruned-cardano-node.flake = false;
@@ -906,6 +916,78 @@ index 3aeb0e5..bea0ac9 100644
           ];
         };
 
+        # cardano-node leios-prototype slot (mirrors cardanoNodePrePkg; src is the
+        # leios-prototype tree and GHC is 9.6.7 — what that tree's nix/haskell.nix
+        # targets). Its cabal.project SRP-pins cardano-cli/api/ledger-dijkstra/
+        # consensus, which haskell.nix fetches via IFD (allow-import-from-derivation
+        # is set), so no manual source-repository-package overrides are needed here.
+        # CHaP is the shared input (index-state 2026-05-02 ⊆ our pinned CHaP).
+        cardanoNodeLeiosPkg = pkgs: pkgs.haskell-nix.project' {
+          compiler-nix-name = "ghc967";
+          src = inputs.cardano-node-leios;
+
+          cabalProjectLocal = ''
+          package cardano-node
+            flags: -systemd
+          package cardano-tracer
+            flags: -systemd
+          constraints: QuickCheck < 2.17
+          '';
+
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://intersectmbo.github.io/cardano-haskell-packages" = inputs.CHaP;
+            "https://chap.intersectmbo.org/" = inputs.CHaP;
+            "https://github.com/google/proto-lens/20de5227947b0c37dd6852dcc6f2db1cd5889cee" = fixProtoLensSrc;
+          };
+          modules = [
+          # proto-lens-protobuf-types and cardano-rpc need protoc at build time
+          # (matches upstream cardano-node's nix/haskell.nix).
+          ({ pkgs, ... }: {
+            packages.proto-lens-protobuf-types.components.library.build-tools =
+              [ pkgs.buildPackages.protobuf ];
+            packages.cardano-rpc.components.library.build-tools =
+              [ pkgs.buildPackages.protobuf ];
+          })
+          ({
+            packages.cardano-node.flags.systemd = false;
+            packages.cardano-tracer.flags.systemd = false;
+          })
+          ({ lib, config, ... }:
+            lib.mkIf (lib.versionAtLeast config.compiler.version "9.4") {
+            reinstallableLibGhc = false;
+          })
+          (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
+            packages.cardano-node.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-lmdb}/lib"
+                "-L${lib.getLib static-snappy}/lib"
+            ];
+            packages.cardano-cli.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-lmdb}/lib"
+                "-L${lib.getLib static-ncurses}/lib"
+            ];
+            packages.cardano-submit-api.ghcOptions = with pkgs; [
+                "-L${lib.getLib static-gmp}/lib"
+                "-L${lib.getLib static-libsodium-vrf}/lib"
+                "-L${lib.getLib static-secp256k1}/lib"
+                "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
+                "-L${lib.getLib static-lmdb}/lib"
+            ];
+          })
+          ];
+        };
+
         # Pruned ImmutableDB variant of cardano-node.
         # Uses angerman/cardano-node (pruned-mode-mithril) as source, and overrides
         # ouroboros-consensus with the pruned-immutabledb branch via source-repository-package.
@@ -1297,6 +1379,35 @@ index 3aeb0e5..bea0ac9 100644
             # cardano-tools-pre-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
 
+        # cardano-node leios-prototype builds (tracking 11.0.1-leios-prototype).
+        # The cli is built FROM the leios node tree (its cabal.project includes the
+        # matching leios cardano-cli), unlike the stable/-pre bundles which reuse the
+        # separately-pinned cardanoCliPkg — that is the whole point: the Dijkstra
+        # ledger queries are only implemented in the leios cardano-api/cli.
+        cardanoNodeLeiosPackages.packages =
+          let node = pkgs: map (exe: (cardanoNodeLeiosPkg pkgs).hsPkgs.${exe}.components.exes.${exe}) [
+                "cardano-node" "cardano-submit-api" "cardano-cli"
+              ]
+              ++ [
+                (cardanoAddressesPkg pkgs).hsPkgs.cardano-addresses.components.exes.cardano-address
+                (bech32Pkgs pkgs).hsPkgs.bech32.components.exes.bech32
+              ];
+              pkg = comps: pkgs.packaging.asZip {
+                name = let comp = if __isList comps then __head comps else comps; in builtins.concatStringsSep "-" [
+                  comp.stdenv.hostPlatform.system
+                  "cardano-node-leios"
+                  comp.version
+                  comp.src.origSrc.shortRev
+                ];
+              } comps;
+          in pkgs.lib.optionalAttrs (system == "x86_64-darwin" || system == "aarch64-darwin") {
+            cardano-tools-leios = pkg (node pkgs);
+          } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+            cardano-tools-leios-static       = pkg (node pkgs.pkgsCross.musl64);
+            cardano-tools-leios-static-arm64 = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
+            # Windows cross disabled (mirrors -pre; Win32-network version conflict)
+          };
+
         # Pruned ImmutableDB variant — only cardano-node and cardano-submit-api
         # (cardano-cli, cardano-addresses, bech32 are unaffected by pruning patches)
         prunedCardanoNodePackages.packages =
@@ -1524,7 +1635,7 @@ index 3aeb0e5..bea0ac9 100644
             #dbSyncPackages
             #ogmiosPackages  -- ogmios is pinned to GHC 8.10.7 which haskell.nix no longer supports
             #encoinsPackages -- encoins is pinned to GHC 8.10.7 which haskell.nix no longer supports
-            cardanoNodePackages cardanoNodePrePackages prunedCardanoNodePackages
+            cardanoNodePackages cardanoNodePrePackages cardanoNodeLeiosPackages prunedCardanoNodePackages
             # nixToolsPackages nixToolsPackagesNoIfd
             mithrilPackages cabalInstallPackages ]
       )

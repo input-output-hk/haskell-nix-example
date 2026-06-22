@@ -169,6 +169,23 @@
         "type": "github"
       }
     },
+    "cardano-node-leios": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1782119114,
+        "narHash": "sha256-UNN2lajF8nauDww2bQBS3p5K/KRHm1VOS8pECsEgUq0=",
+        "owner": "IntersectMBO",
+        "repo": "cardano-node",
+        "rev": "7c357a5531cc3316e9f708f4465eb66db564d8aa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "IntersectMBO",
+        "repo": "cardano-node",
+        "rev": "7c357a5531cc3316e9f708f4465eb66db564d8aa",
+        "type": "github"
+      }
+    },
     "cardano-node-pre": {
       "flake": false,
       "locked": {
@@ -972,6 +989,7 @@
         "cardano-addresses": "cardano-addresses",
         "cardano-cli": "cardano-cli",
         "cardano-node": "cardano-node",
+        "cardano-node-leios": "cardano-node-leios",
         "cardano-node-pre": "cardano-node-pre",
         "crane": "crane",
         "db-sync": "db-sync",
