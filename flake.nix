@@ -923,7 +923,12 @@ index 3aeb0e5..bea0ac9 100644
         # is set), so no manual source-repository-package overrides are needed here.
         # CHaP is the shared input (index-state 2026-05-02 ⊆ our pinned CHaP).
         cardanoNodeLeiosPkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc967";
+          # ghc966 (NOT 967): 9.6.6 is cached for aarch64-darwin (the stable/-pre
+          # bundles use it), whereas 9.6.7 is not — pinning 967 forces a ~4h
+          # from-source GHC build (and left the zw3rk job undispatched for hours).
+          # The leios tree defaults to 967 but 9.6.6→9.6.7 is a patch bump; build
+          # the leios packages on the cached 966 to skip the GHC build entirely.
+          compiler-nix-name = "ghc966";
           src = inputs.cardano-node-leios;
 
           cabalProjectLocal = ''
