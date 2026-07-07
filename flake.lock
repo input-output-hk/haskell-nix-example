@@ -121,16 +121,16 @@
     "cardano-addresses": {
       "flake": false,
       "locked": {
-        "lastModified": 1738655754,
-        "narHash": "sha256-lNCt4V4TyD9EmQwA6dcbEOdhVdAEXPeG4B2IP93icaw=",
+        "lastModified": 1782131853,
+        "narHash": "sha256-sAC7ND/V3URNfno4ej+rXoUdtRRNgIs/QiYRTauC9AU=",
         "owner": "IntersectMBO",
         "repo": "cardano-addresses",
-        "rev": "3749045778e0d8bb1f2bed1c598594eeed0b442e",
+        "rev": "b566a87fd617c327998be2c0133a40e44b17b93e",
         "type": "github"
       },
       "original": {
         "owner": "IntersectMBO",
-        "ref": "4.0.0",
+        "ref": "4.0.6",
         "repo": "cardano-addresses",
         "type": "github"
       }
@@ -138,16 +138,16 @@
     "cardano-cli": {
       "flake": false,
       "locked": {
-        "lastModified": 1773944507,
-        "narHash": "sha256-4ECR7cutyLExBguMJs3GCqNISlaRuonSG5QeM+CXrX4=",
+        "lastModified": 1777652970,
+        "narHash": "sha256-NYT0ytMi/g347tQiJNkPXDfviAhbcpZjyBS6K9dkGBA=",
         "owner": "IntersectMBO",
         "repo": "cardano-cli",
-        "rev": "cf973b8604222d2bd0a1060037ccab0197c752a4",
+        "rev": "01a89dad991e5a19990150b4e1de348a1481a37a",
         "type": "github"
       },
       "original": {
         "owner": "IntersectMBO",
-        "ref": "cardano-cli-10.15.1.0",
+        "ref": "cardano-cli-11.0.0.0",
         "repo": "cardano-cli",
         "type": "github"
       }
@@ -338,11 +338,11 @@
     "hackageNix": {
       "flake": false,
       "locked": {
-        "lastModified": 1775577292,
-        "narHash": "sha256-MLYPDbBSS9WdoYOHAJTPiFHHHJCB+OH0R5P0NeiXnUM=",
+        "lastModified": 1783386668,
+        "narHash": "sha256-qyniJJtPVM/SMQB4MoBmvdwSvkTKZWaLY1nAP2n2zoA=",
         "owner": "input-output-hk",
         "repo": "hackage.nix",
-        "rev": "34ed2cc7961a1d3981ba1e9862103c33cf92699a",
+        "rev": "4ef1d9d5cd924c2b81e44138c23608f1c9f8c3bf",
         "type": "github"
       },
       "original": {
@@ -737,16 +737,16 @@
     "mithril": {
       "flake": false,
       "locked": {
-        "lastModified": 1749570267,
-        "narHash": "sha256-v/kHXMslACQtAY33QGtGqEaQEp5B37wbWrk6m0654dA=",
+        "lastModified": 1776926918,
+        "narHash": "sha256-muV2LpheC4OZsU1ipL9j6TmjGufMpGrXzvon+eWahgg=",
         "owner": "input-output-hk",
         "repo": "mithril",
-        "rev": "7bf703389b0ba5ebade0e88449c79c75706cfbbc",
+        "rev": "2478748ea9771baed8181ef0938c78f79ed60760",
         "type": "github"
       },
       "original": {
         "owner": "input-output-hk",
-        "ref": "2524.0",
+        "ref": "2617.0",
         "repo": "mithril",
         "type": "github"
       }

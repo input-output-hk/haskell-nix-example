@@ -57,10 +57,10 @@
     pruned-ouroboros-consensus.url = "github:angerman/ouroboros-consensus?ref=angerman/pruned-immutabledb";
     pruned-ouroboros-consensus.flake = false;
 
-    cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-10.15.1.0";
+    cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-11.0.0.0";
     cardano-cli.flake = false;
 
-    cardano-addresses.url = "github:IntersectMBO/cardano-addresses?ref=4.0.0";
+    cardano-addresses.url = "github:IntersectMBO/cardano-addresses?ref=4.0.6";
     cardano-addresses.flake = false;
 
     bech32.url = "github:IntersectMBO/bech32?ref=v1.1.7";
@@ -80,7 +80,7 @@
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
     rust-overlay.inputs.flake-utils.follows = "flake-utils";
 
-    mithril.url = "github:input-output-hk/mithril?ref=2524.0";
+    mithril.url = "github:input-output-hk/mithril?ref=2617.0";
     mithril.flake = false;
 
     # kupo needs the crypto overlays from iohk-nix
