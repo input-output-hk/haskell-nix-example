@@ -334,7 +334,12 @@
             #   # stop putting U __cxa_guard_release into the library!
             #   "-optcxx-std=gnu++98" "-optcxx-fno-threadsafe-statics"
             # ];
-            packages.plutus-core.patches = [
+            # Gate the plutus-core THReader patch to aarch64-musl only. It is an
+            # old-plutus-core aarch64-linux TH fix whose hunk does NOT apply to
+            # ogmios v7's plutus-core 1.63.0.0 — applying it unconditionally broke
+            # the darwin/x86_64 ogmios builds (patch hunk FAILED). It is unneeded
+            # off aarch64-musl anyway. (kupo/hydra gate the same patch this way.)
+            packages.plutus-core.patches = pkgs.lib.optionals (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) [
               # This patch is needed to fix a build error on aarch64-linux.
               #
               # plutus-core-lib-plutus-core-aarch64-unknown-linux-musl> plutus-core/src/PlutusCore/Evaluation/Machine/ExBudgetingDefaults.hs:67:6: error:
