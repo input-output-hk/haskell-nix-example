@@ -665,16 +665,16 @@
     "hydra": {
       "flake": false,
       "locked": {
-        "lastModified": 1781270230,
-        "narHash": "sha256-YQpodRxR+DqLsSVlegl3fqP9dFLXKd+Rhq4KFnwD3G8=",
+        "lastModified": 1778662185,
+        "narHash": "sha256-oL5S5Tnlf+0zbwZ7irWXjkFp9skVlfgfwp5uCIlVVu8=",
         "owner": "input-output-hk",
         "repo": "hydra",
-        "rev": "25b8bd2b54cdc28aed491346dca383f3c8001077",
+        "rev": "d7b721ecf7bd9c41e2bfc1207d970a09830aaa35",
         "type": "github"
       },
       "original": {
         "owner": "input-output-hk",
-        "ref": "2.2.0",
+        "ref": "2.1.0",
         "repo": "hydra",
         "type": "github"
       }
@@ -917,17 +917,19 @@
       "flake": false,
       "locked": {
         "lastModified": 1781972648,
-        "narHash": "sha256-4pYUOHpOu9+H+itGtiCLdex+kmCkLzMep54A2NxtMhI=",
-        "owner": "CardanoSolutions",
-        "repo": "ogmios",
+        "narHash": "sha256-6CV6zWKIDdsecCSE7nnOQsnrFlK2veFZ/9gGQYlmvU8=",
+        "ref": "refs/tags/v7.0.0",
         "rev": "b3a830a1bf2fbfd0ce1fd0fb238aee2d73d7cdbe",
-        "type": "github"
+        "revCount": 1826,
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/CardanoSolutions/ogmios"
       },
       "original": {
-        "owner": "CardanoSolutions",
-        "ref": "v7.0.0",
-        "repo": "ogmios",
-        "type": "github"
+        "ref": "refs/tags/v7.0.0",
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/CardanoSolutions/ogmios"
       }
     },
     "old-ghc-nix": {

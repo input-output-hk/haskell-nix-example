@@ -22,10 +22,19 @@
     kupo.url = "github:CardanoSolutions/kupo?ref=v2.11.0";
     kupo.flake = false;
 
-    ogmios.url = "github:CardanoSolutions/ogmios?ref=v7.0.0";
+    # git+https (not github:) with submodules=1 — ogmios' cabal.project lists
+    # modules/hjsonpointer and modules/hjsonschema as local packages, and those
+    # are git submodules the github: tarball fetcher does not pull (eval fails with
+    # "does not contain any .cabal file"). All submodule URLs are HTTPS.
+    ogmios.url = "git+https://github.com/CardanoSolutions/ogmios?ref=refs/tags/v7.0.0&submodules=1";
     ogmios.flake = false;
 
-    hydra.url = "github:input-output-hk/hydra?ref=2.2.0";
+    # 2.1.0, not 2.2.0: hydra 2.2.0 added hydra-tx → haskell-accumulator, which
+    # needs the librust_accumulator pkg-config lib (upstream provides it via the
+    # rust-accumulator flake input, incl. cross builds). Until that Rust lib is
+    # wired here (also for the static musl variants), 2.1.0 is the latest hydra
+    # that resolves with the current setup.
+    hydra.url = "github:input-output-hk/hydra?ref=2.1.0";
     hydra.flake = false;
 
     db-sync.url = "github:input-output-hk/cardano-db-sync?ref=13.7.2.1";
