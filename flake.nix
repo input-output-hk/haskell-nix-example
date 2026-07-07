@@ -19,16 +19,16 @@
     # ghc943 which breaks the bootstrap overlay.
     nixpkgs.url = "github:NixOS/nixpkgs/647e5c14cbd5067f44ac86b74f014962df460840";
 
-    kupo.url = "github:CardanoSolutions/kupo?ref=v2.7";
+    kupo.url = "github:CardanoSolutions/kupo?ref=v2.11.0";
     kupo.flake = false;
 
-    ogmios.url = "github:CardanoSolutions/ogmios?rev=199daf67062e7c9efa735a0ba7d80d49108a56a0";
+    ogmios.url = "github:CardanoSolutions/ogmios?ref=v7.0.0";
     ogmios.flake = false;
 
-    hydra.url = "github:input-output-hk/hydra?rev=899aefd341789ac0fbcf8c22a9bdbfcc83329b5b";
+    hydra.url = "github:input-output-hk/hydra?ref=2.2.0";
     hydra.flake = false;
 
-    db-sync.url = "github:input-output-hk/cardano-db-sync?ref=13.1.0.2";
+    db-sync.url = "github:input-output-hk/cardano-db-sync?ref=13.7.2.1";
     db-sync.flake = false;
 
     encoins.url = "github:encryptedcoins/encoins-relay";
@@ -41,13 +41,16 @@
     cardano-node-pre.flake = false;
 
     # cardano-node leios-prototype slot — duplicated from -pre so -pre stays free
-    # for official pre-releases. The live magic-164 Leios testnet now requires
-    # 11.0.1-leios-prototype; this branch builds cardano-node 11.0.1.164 and its
-    # cabal.project SRP-pins the matching cardano-cli + cardano-api (where the
-    # Dijkstra ledger queries live) + cardano-ledger-dijkstra + ouroboros-consensus,
-    # so building this one tree yields the Dijkstra-capable cli too. Pinned to an
-    # exact commit because the leios-prototype integration branch moves daily.
-    cardano-node-leios.url = "github:IntersectMBO/cardano-node/7c357a5531cc3316e9f708f4465eb66db564d8aa";
+    # for official pre-releases. Tracks IntersectMBO/cardano-node's leios-prototype
+    # branch, which is exactly what the Musashi Dōjō public Leios testnet
+    # (musashi.network, live 2026-06-23) builds its node from — ouroboros-leios pins
+    # `cardano-node-leios.url = github:intersectmbo/cardano-node?ref=leios-prototype`.
+    # Pinned here to the exact commit its prototype-2026w27 checkpoint uses, because
+    # the leios-prototype integration branch moves daily. Its cabal.project SRP-pins
+    # the matching cardano-cli + cardano-api (where the Dijkstra ledger queries live)
+    # + cardano-ledger-dijkstra + ouroboros-consensus, so building this one tree
+    # yields the Dijkstra-capable cli too.
+    cardano-node-leios.url = "github:IntersectMBO/cardano-node/3cc6340a896eadee5cdbf2b256751d23dc267ba3";
     cardano-node-leios.flake = false;
 
     # Pruned ImmutableDB variant (cardano-node + ouroboros-consensus with pruning support)
@@ -57,7 +60,7 @@
     pruned-ouroboros-consensus.url = "github:angerman/ouroboros-consensus?ref=angerman/pruned-immutabledb";
     pruned-ouroboros-consensus.flake = false;
 
-    cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-11.0.0.0";
+    cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-11.1.0.0";
     cardano-cli.flake = false;
 
     cardano-addresses.url = "github:IntersectMBO/cardano-addresses?ref=4.0.6";
@@ -214,8 +217,10 @@
 
         # If we want to use a source-referenced flake we can do this as well
         kupoPkgs = pkgs: pkgs.haskell-nix.project' {
-          # kupo builds with 8107
-          compiler-nix-name = "ghc963";
+          # kupo v2.11.0's CI uses ghc948, but this pinned haskell.nix only supports
+          # GHC ≥ 9.6, so build on the cached ghc966 (same as the node bundle). kupo's
+          # 2024-10-10 index-state resolves fine on 9.6.x.
+          compiler-nix-name = "ghc966";
           # strip the package.yaml from the source. haskell.nix's tooling will
           # choke on this special one.
           src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
@@ -231,9 +236,10 @@
                        "https://chap.intersectmbo.org" = inputs.CHaP;
                       };
           sha256map = {
-            "https://github.com/CardanoSolutions/ogmios"."01f7787216e7ceb8e39c8c6807f7ae53fc14ab9e" = "16mdvv3qws92fins673jb2qiw7b9vd0pwzwvq9zvi6zkhhhkfdfm";
-            "https://github.com/CardanoSolutions/direct-sqlite"."82c5ab46715ecd51901256144f1411b480e2cb8b" = "1r1g6nf65d9n436ppcjky3gkywpnx4y0a3v88ddngchmf8za3qky";
-            "https://github.com/CardanoSolutions/text-ansi"."dd81fe6b30e78e95589b29fd1b7be1c18bd6e700" = "0c9ckqcl4lahmkkfhj95bwwj4l2w8hlw0429gi1yly2mbdb688cq";
+            # kupo v2.11.0 source-repository-packages (cabal.project):
+            "https://github.com/CardanoSolutions/ogmios"."ae876badb138f42dcd6d2389734b0c15502684ed" = "132lr6qqda319150fb2jplklkgz26l6hw7zqmizxnf70jx40dnyc";
+            "https://github.com/CardanoSolutions/sqlite-simple"."08015be2ee52a7e67159b6b0c476bd3e0a2e0b87" = "1ahpjycsfibv09kzgfbm4i55z4nz1p3rvnmfwwwraxy45n1ivl85";
+            "https://github.com/CardanoSolutions/direct-sqlite"."2b14a78cb73805e2e5d84354230e872a223faa39" = "1lwaariy0zjjh006ll1zbpdi9sphyqmcbbxhb0rj99nii5s91fd7";
             "https://github.com/CardanoSolutions/text-ansi"."e204822d2f343b2d393170a2ec46ee935571345c" = "16ki7wsf7wivxn65acv4hxwfrzmphq4zp61lpxwzqkgrg8shi8bv";
           };
           modules = [
@@ -295,8 +301,9 @@
           ];
         };
         ogmiosPkgs = pkgs: pkgs.haskell-nix.project' {
-          # ogmios builds with 8107
-          compiler-nix-name = "ghc8107";
+          # ogmios v7.0.0 targets cardano-node 11.0.1 (ghc 9.6.x). Build on the
+          # cached ghc966 (same as the node bundle) rather than the old ghc8107.
+          compiler-nix-name = "ghc966";
           # strip the package.yaml from the source. haskell.nix's tooling will
           # choke on this special one.
           src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
@@ -921,7 +928,7 @@ index 3aeb0e5..bea0ac9 100644
         # targets). Its cabal.project SRP-pins cardano-cli/api/ledger-dijkstra/
         # consensus, which haskell.nix fetches via IFD (allow-import-from-derivation
         # is set), so no manual source-repository-package overrides are needed here.
-        # CHaP is the shared input (index-state 2026-05-02 ⊆ our pinned CHaP).
+        # CHaP is the shared input (leios w27 index-state 2026-06-29 ⊆ our pinned CHaP).
         cardanoNodeLeiosPkg = pkgs: pkgs.haskell-nix.project' {
           # ghc966 (NOT 967): 9.6.6 is cached for aarch64-darwin (the stable/-pre
           # bundles use it), whereas 9.6.7 is not — pinning 967 forces a ~4h
@@ -1638,7 +1645,7 @@ index 3aeb0e5..bea0ac9 100644
           nativePackages
           [ linuxCrossPackages kupoPackages hydraPackages
             #dbSyncPackages
-            #ogmiosPackages  -- ogmios is pinned to GHC 8.10.7 which haskell.nix no longer supports
+            ogmiosPackages  # ogmios v7.0.0 builds on ghc966 (was disabled while pinned to GHC 8.10.7)
             #encoinsPackages -- encoins is pinned to GHC 8.10.7 which haskell.nix no longer supports
             cardanoNodePackages cardanoNodePrePackages cardanoNodeLeiosPackages prunedCardanoNodePackages
             # nixToolsPackages nixToolsPackagesNoIfd
