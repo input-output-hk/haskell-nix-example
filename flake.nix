@@ -372,11 +372,12 @@
             ];
           }
           (pkgs.lib.mkIf pkgs.hostPlatform.isDarwin {
-            packages.kupo.ghcOptions = with pkgs; [
+            packages.ogmios.ghcOptions = with pkgs; [
                 "-L${lib.getLib static-gmp}/lib"
                 "-L${lib.getLib static-libsodium-vrf}/lib"
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
+                "-L${lib.getLib static-libblst}/lib"
             ];
           })];
         };
