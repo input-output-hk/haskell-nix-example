@@ -822,10 +822,12 @@ index 3aeb0e5..bea0ac9 100644
             flags: -systemd
           package cardano-tracer
             flags: -systemd
-          -- hedgehog-1.7 → monad-control-1.0.3.1 needs transformers-compat < 0.8;
-          -- semigroupoids-6.0.2 otherwise pulls 0.8 and Windows plan-to-nix hits
-          -- Cabal-7107 (mingwW64/ucrt + hydraJobs.index).
-          constraints: any.transformers-compat < 0.8
+          -- Windows plan-to-nix Cabal-7107 (mingwW64/ucrt + hydraJobs.index):
+          -- hedgehog-1.7 → monad-control-1.0.3.1 needs transformers-compat < 0.8
+          -- (semigroupoids-6.0.2 otherwise pulls 0.8).
+          -- ouroboros-consensus-4.2.1.0 wants resource-registry ^>= 0.3; without
+          -- this, Windows selects 0.4.0.0.
+          constraints: any.transformers-compat < 0.8, any.resource-registry < 0.4
           '';
 
           inputMap = {
@@ -908,7 +910,7 @@ index 3aeb0e5..bea0ac9 100644
             flags: -systemd
           package cardano-tracer
             flags: -systemd
-          constraints: QuickCheck < 2.17, any.transformers-compat < 0.8
+          constraints: QuickCheck < 2.17, any.transformers-compat < 0.8, any.resource-registry < 0.4
           '';
 
           inputMap = {
