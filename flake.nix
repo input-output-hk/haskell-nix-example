@@ -252,20 +252,19 @@
             "https://github.com/CardanoSolutions/text-ansi"."e204822d2f343b2d393170a2ec46ee935571345c" = "16ki7wsf7wivxn65acv4hxwfrzmphq4zp61lpxwzqkgrg8shi8bv";
           };
           modules = [
-          # kupo.cabal data-files still lists docs/api/v2.9.0.yaml, but v2.11.0
-          # ships v2.11.0.yaml instead. installPhase then dies Cabal-6661.
+          # kupo.cabal data-files lists docs/api/v2.9.0.yaml, which is not in
+          # the v2.11.0 tree (it has v2.11.0.yaml). haskell.nix filters src to
+          # names from the unpatched cabal, so swapping the filename still
+          # Cabal-6661s. Drop the missing entry; nightly + v2.10.0 stay.
           {
             packages.kupo.patches = [
               (builtins.toFile "kupo-data-files.patch" ''
               diff --git a/kupo.cabal b/kupo.cabal
               --- a/kupo.cabal
               +++ b/kupo.cabal
-              @@ -32,6 +32,6 @@ extra-source-files:
-               data-files:
-                   docs/api/nightly.yaml
+              @@ -34,3 +34,2 @@ data-files:
                    docs/api/v2.10.0.yaml
               -    docs/api/v2.9.0.yaml
-              +    docs/api/v2.11.0.yaml
                
               '')
             ];
