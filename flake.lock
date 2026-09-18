@@ -172,17 +172,17 @@
     "cardano-node-leios": {
       "flake": false,
       "locked": {
-        "lastModified": 1783348249,
-        "narHash": "sha256-f6jw2opMNOu98UPzRJmSlDI4HkXBK25HjWaRgRG6WCE=",
+        "lastModified": 1788777256,
+        "narHash": "sha256-7hYll0WQ5ou7MgFnaizWlbfhH0MRutwypJpwIHsQ1CY=",
         "owner": "IntersectMBO",
         "repo": "cardano-node",
-        "rev": "3cc6340a896eadee5cdbf2b256751d23dc267ba3",
+        "rev": "afa091b4af2795d1d9c46e59145ed16127760f7b",
         "type": "github"
       },
       "original": {
         "owner": "IntersectMBO",
         "repo": "cardano-node",
-        "rev": "3cc6340a896eadee5cdbf2b256751d23dc267ba3",
+        "rev": "afa091b4af2795d1d9c46e59145ed16127760f7b",
         "type": "github"
       }
     },

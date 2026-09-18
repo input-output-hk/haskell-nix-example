@@ -54,12 +54,12 @@
     # branch, which is exactly what the Musashi Dōjō public Leios testnet
     # (musashi.network, live 2026-06-23) builds its node from — ouroboros-leios pins
     # `cardano-node-leios.url = github:intersectmbo/cardano-node?ref=leios-prototype`.
-    # Pinned here to the exact commit its prototype-2026w27 checkpoint uses, because
+    # Pinned here to the exact commit its prototype-2026w36 checkpoint uses, because
     # the leios-prototype integration branch moves daily. Its cabal.project SRP-pins
     # the matching cardano-cli + cardano-api (where the Dijkstra ledger queries live)
     # + cardano-ledger-dijkstra + ouroboros-consensus, so building this one tree
     # yields the Dijkstra-capable cli too.
-    cardano-node-leios.url = "github:IntersectMBO/cardano-node/3cc6340a896eadee5cdbf2b256751d23dc267ba3";
+    cardano-node-leios.url = "github:IntersectMBO/cardano-node/afa091b4af2795d1d9c46e59145ed16127760f7b";
     cardano-node-leios.flake = false;
 
     # Pruned ImmutableDB variant (cardano-node + ouroboros-consensus with pruning support)
@@ -943,7 +943,7 @@ index 3aeb0e5..bea0ac9 100644
         # targets). Its cabal.project SRP-pins cardano-cli/api/ledger-dijkstra/
         # consensus, which haskell.nix fetches via IFD (allow-import-from-derivation
         # is set), so no manual source-repository-package overrides are needed here.
-        # CHaP is the shared input (leios w27 index-state 2026-06-29 ⊆ our pinned CHaP).
+        # CHaP is the shared input (leios w36 index-state 2026-09-02 ⊆ our pinned CHaP).
         cardanoNodeLeiosPkg = pkgs: pkgs.haskell-nix.project' {
           # ghc966 (NOT 967): 9.6.6 is cached for aarch64-darwin (the stable/-pre
           # bundles use it), whereas 9.6.7 is not — pinning 967 forces a ~4h
@@ -1406,7 +1406,7 @@ index 3aeb0e5..bea0ac9 100644
             # cardano-tools-pre-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
 
-        # cardano-node leios-prototype builds (tracking 11.0.1-leios-prototype).
+        # cardano-node leios-prototype builds (tracking 11.1.0.164 / prototype-2026w36).
         # The cli is built FROM the leios node tree (its cabal.project includes the
         # matching leios cardano-cli), unlike the stable/-pre bundles which reuse the
         # separately-pinned cardanoCliPkg — that is the whole point: the Dijkstra
