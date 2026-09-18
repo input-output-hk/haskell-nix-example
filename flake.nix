@@ -459,6 +459,10 @@
                 "-L${lib.getLib static-secp256k1}/lib"
                 "-L${lib.getLib static-openssl}/lib"
                 "-L${lib.getLib static-libblst}/lib"
+                # hydra-node 2.1.0 links snappy; force the static archive so
+                # packaging.nix checkPhase does not see libsnappy.dylib from
+                # the nix store (same as cardano-node 10.7.x / 21b454c).
+                "-L${lib.getLib static-snappy}/lib"
             ];
           })
           (pkgs.lib.mkIf (pkgs.hostPlatform.isMusl && pkgs.hostPlatform.isAarch64) {
