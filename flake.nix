@@ -1403,8 +1403,12 @@ index 3aeb0e5..bea0ac9 100644
           } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
             cardano-tools-static       = pkg (node pkgs.pkgsCross.musl64);
             cardano-tools-static-arm64 = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
-            cardano-tools-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
-            cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
+            # Windows cross disabled for 11.1.2: Win32-network 0.2 (required by
+            # ouroboros-consensus 4.2.1.0) wants Win32^>=2.14, but ghc966's
+            # process ships Win32 2.13.3.0. Upstream builds Windows with
+            # ghc9122. Same conflict that disabled -pre in 360deba.
+            # cardano-tools-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
+            # cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
 
         # cardano-node pre-release builds (tracking 11.1.2)
@@ -1430,7 +1434,7 @@ index 3aeb0e5..bea0ac9 100644
           } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
             cardano-tools-pre-static       = pkg (node pkgs.pkgsCross.musl64);
             cardano-tools-pre-static-arm64 = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
-            # Windows cross disabled for pre-release (Win32-network version conflict; carried over from 10.7.0 era — revisit when bumping)
+            # Windows cross disabled (Win32-network 0.2 vs ghc966 Win32 2.13; same as stable 11.1.2)
             # cardano-tools-pre-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
             # cardano-tools-pre-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
