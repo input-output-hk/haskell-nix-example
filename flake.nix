@@ -252,6 +252,24 @@
             "https://github.com/CardanoSolutions/text-ansi"."e204822d2f343b2d393170a2ec46ee935571345c" = "16ki7wsf7wivxn65acv4hxwfrzmphq4zp61lpxwzqkgrg8shi8bv";
           };
           modules = [
+          # kupo.cabal data-files still lists docs/api/v2.9.0.yaml, but v2.11.0
+          # ships v2.11.0.yaml instead. installPhase then dies Cabal-6661.
+          {
+            packages.kupo.patches = [
+              (builtins.toFile "kupo-data-files.patch" ''
+              diff --git a/kupo.cabal b/kupo.cabal
+              --- a/kupo.cabal
+              +++ b/kupo.cabal
+              @@ -32,6 +32,6 @@ extra-source-files:
+               data-files:
+                   docs/api/nightly.yaml
+                   docs/api/v2.10.0.yaml
+              -    docs/api/v2.9.0.yaml
+              +    docs/api/v2.11.0.yaml
+               
+              '')
+            ];
+          }
           # {
           #   packages.double-conversion.ghcOptions = [
           #     # stop putting U __gxx_personality_v0 into the library!
@@ -402,6 +420,11 @@
               [ pkgs.buildPackages.protobuf ];
             packages.proto-lens-etcd.components.library.build-tools =
               [ pkgs.buildPackages.protobuf ];
+            # hydra-node TH embedExecutable "etcd" shells out at compile time
+            # (Hydra.Network.EtcdBinary). Without etcd on PATH, hydra-native
+            # dies with GHC-87897 "etcd not found".
+            packages.hydra-node.components.library.build-tools =
+              [ pkgs.buildPackages.etcd ];
           })
           {
             # packages.double-conversion.ghcOptions = [
@@ -799,6 +822,10 @@ index 3aeb0e5..bea0ac9 100644
             flags: -systemd
           package cardano-tracer
             flags: -systemd
+          -- hedgehog-1.7 → monad-control-1.0.3.1 needs transformers-compat < 0.8;
+          -- semigroupoids-6.0.2 otherwise pulls 0.8 and Windows plan-to-nix hits
+          -- Cabal-7107 (mingwW64/ucrt + hydraJobs.index).
+          constraints: any.transformers-compat < 0.8
           '';
 
           inputMap = {
@@ -881,7 +908,7 @@ index 3aeb0e5..bea0ac9 100644
             flags: -systemd
           package cardano-tracer
             flags: -systemd
-          constraints: QuickCheck < 2.17
+          constraints: QuickCheck < 2.17, any.transformers-compat < 0.8
           '';
 
           inputMap = {
