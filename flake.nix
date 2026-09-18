@@ -43,10 +43,10 @@
     encoins.url = "github:encryptedcoins/encoins-relay";
     encoins.flake = false;
 
-    cardano-node.url = "github:IntersectMBO/cardano-node?ref=11.0.1";
+    cardano-node.url = "github:IntersectMBO/cardano-node?ref=11.1.2";
     cardano-node.flake = false;
 
-    cardano-node-pre.url = "github:IntersectMBO/cardano-node?ref=11.0.1";
+    cardano-node-pre.url = "github:IntersectMBO/cardano-node?ref=11.1.2";
     cardano-node-pre.flake = false;
 
     # cardano-node leios-prototype slot — duplicated from -pre so -pre stays free
@@ -69,7 +69,7 @@
     pruned-ouroboros-consensus.url = "github:angerman/ouroboros-consensus?ref=angerman/pruned-immutabledb";
     pruned-ouroboros-consensus.flake = false;
 
-    cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-11.1.0.0";
+    cardano-cli.url = "github:IntersectMBO/cardano-cli?ref=cardano-cli-11.2.3.0";
     cardano-cli.flake = false;
 
     cardano-addresses.url = "github:IntersectMBO/cardano-addresses?ref=4.0.6";
@@ -871,7 +871,7 @@ index 3aeb0e5..bea0ac9 100644
           ];
         };
 
-        # cardano-node pre-release slot (currently tracking 11.0.1 — no newer pre-release available)
+        # cardano-node pre-release slot (currently tracking 11.1.2 — no newer pre-release available)
         cardanoNodePrePkg = pkgs: pkgs.haskell-nix.project' {
           compiler-nix-name = "ghc966";
           src = inputs.cardano-node-pre;
@@ -1378,7 +1378,7 @@ index 3aeb0e5..bea0ac9 100644
             cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
 
-        # cardano-node pre-release builds (tracking 11.0.1)
+        # cardano-node pre-release builds (tracking 11.1.2)
         cardanoNodePrePackages.packages =
           let node = pkgs: map (exe: (cardanoNodePrePkg pkgs).hsPkgs.${exe}.components.exes.${exe}) [
                 "cardano-node" "cardano-submit-api"
