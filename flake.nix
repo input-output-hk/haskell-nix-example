@@ -15,9 +15,10 @@
       flake = false;
     };
     haskellNix.inputs.iserv-proxy.follows = "iserv-proxy";
-    # Pin nixpkgs independently — haskell.nix's nixpkgs-unstable dropped
-    # ghc943 which breaks the bootstrap overlay.
-    nixpkgs.url = "github:NixOS/nixpkgs/647e5c14cbd5067f44ac86b74f014962df460840";
+    # haskell.nix CI caches GHC against these pins. Unstable (26.11) dropped
+    # x86_64-darwin; 26.05 is the last release that still has it.
+    nixpkgs.follows = "haskellNix/nixpkgs-unstable";
+    nixpkgs-2605.follows = "haskellNix/nixpkgs-2605";
 
     kupo.url = "github:CardanoSolutions/kupo?ref=v2.11.0";
     kupo.flake = false;
@@ -86,11 +87,9 @@
 
     # rust stuff
     crane.url = "github:ipetkov/crane";
-    crane.inputs.nixpkgs.follows = "nixpkgs";
 
     rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
-    rust-overlay.inputs.flake-utils.follows = "flake-utils";
 
     mithril.url = "github:input-output-hk/mithril?ref=2617.0";
     mithril.flake = false;
@@ -105,8 +104,11 @@
   };
 
   outputs = { self, nixpkgs, rust-overlay, flake-utils, haskellNix, ... }@inputs:
-    # choose the compiler you want. For now we use ghc964.
-    let compiler-nix-name = "ghc966"; in
+    # ghc9124 is what haskell.nix CI caches (incl. aarch64-darwin and
+    # Windows ucrt64/mingwW64). ghc966's Win32 2.13 cannot satisfy
+    # Win32-network 0.2 (needs Win32^>=2.14); upstream node uses ghc9122
+    # for Windows — 9.12.4 is the cached 9.12.
+    let compiler-nix-name = "ghc9124"; in
     let flake = flake-utils.lib.eachDefaultSystem (system:
       let
 
@@ -114,7 +116,8 @@
         # adding the haskellNix overlay.
         # We need the iohkNix overlays to get the necessary cryto packages.
         # secp256k1, blst, and libsodium.
-        pkgs = import nixpkgs {
+        pkgsNixpkgs = if system == "x86_64-darwin" then inputs.nixpkgs-2605 else nixpkgs;
+        pkgs = import pkgsNixpkgs {
           inherit system;
           overlays = with inputs; [
             iohkNix.overlays.crypto
@@ -206,7 +209,7 @@
           # selecting the correct wine version for cross compilation.
           inherit (haskellNix) config;
         };
-        rsPkgs = import nixpkgs {
+        rsPkgs = import pkgsNixpkgs {
           inherit system;
           overlays = [
             (import rust-overlay)
@@ -226,10 +229,9 @@
 
         # If we want to use a source-referenced flake we can do this as well
         kupoPkgs = pkgs: pkgs.haskell-nix.project' {
-          # kupo v2.11.0's CI uses ghc948, but this pinned haskell.nix only supports
-          # GHC ≥ 9.6, so build on the cached ghc966 (same as the node bundle). kupo's
-          # 2024-10-10 index-state resolves fine on 9.6.x.
-          compiler-nix-name = "ghc966";
+          # kupo v2.11.0's CI uses ghc948; build on the same cached compiler as
+          # the node bundle (ghc9124). kupo's 2024-10-10 index-state still resolves.
+          inherit compiler-nix-name;
           # strip the package.yaml from the source. haskell.nix's tooling will
           # choke on this special one.
           src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
@@ -327,9 +329,9 @@
           ];
         };
         ogmiosPkgs = pkgs: pkgs.haskell-nix.project' {
-          # ogmios v7.0.0 targets cardano-node 11.0.1 (ghc 9.6.x). Build on the
-          # cached ghc966 (same as the node bundle) rather than the old ghc8107.
-          compiler-nix-name = "ghc966";
+          # ogmios v7.0.0 targets cardano-node 11.0.1. Build on the same cached
+          # compiler as the node bundle rather than the old ghc8107.
+          inherit compiler-nix-name;
           # strip the package.yaml from the source. haskell.nix's tooling will
           # choke on this special one.
           src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
@@ -404,7 +406,7 @@
           })];
         };
         hydraPkgs = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc966";
+          inherit compiler-nix-name;
           src = inputs.hydra;
 
           inputMap = {
@@ -817,7 +819,7 @@ index 3aeb0e5..bea0ac9 100644
         '';
 
         cardanoNodePkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc966";
+          inherit compiler-nix-name;
           src = inputs.cardano-node;
 
           cabalProjectLocal = ''
@@ -905,7 +907,7 @@ index 3aeb0e5..bea0ac9 100644
 
         # cardano-node pre-release slot (currently tracking 11.1.2 — no newer pre-release available)
         cardanoNodePrePkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc966";
+          inherit compiler-nix-name;
           src = inputs.cardano-node-pre;
 
           cabalProjectLocal = ''
@@ -970,19 +972,13 @@ index 3aeb0e5..bea0ac9 100644
           ];
         };
 
-        # cardano-node leios-prototype slot (mirrors cardanoNodePrePkg; src is the
-        # leios-prototype tree and GHC is 9.6.7 — what that tree's nix/haskell.nix
-        # targets). Its cabal.project SRP-pins cardano-cli/api/ledger-dijkstra/
+        # cardano-node leios-prototype slot (mirrors cardanoNodePrePkg).
+        # Its cabal.project SRP-pins cardano-cli/api/ledger-dijkstra/
         # consensus, which haskell.nix fetches via IFD (allow-import-from-derivation
         # is set), so no manual source-repository-package overrides are needed here.
         # CHaP is the shared input (leios w36 index-state 2026-09-02 ⊆ our pinned CHaP).
         cardanoNodeLeiosPkg = pkgs: pkgs.haskell-nix.project' {
-          # ghc966 (NOT 967): 9.6.6 is cached for aarch64-darwin (the stable/-pre
-          # bundles use it), whereas 9.6.7 is not — pinning 967 forces a ~4h
-          # from-source GHC build (and left the zw3rk job undispatched for hours).
-          # The leios tree defaults to 967 but 9.6.6→9.6.7 is a patch bump; build
-          # the leios packages on the cached 966 to skip the GHC build entirely.
-          compiler-nix-name = "ghc966";
+          inherit compiler-nix-name;
           src = inputs.cardano-node-leios;
 
           cabalProjectLocal = ''
@@ -1051,7 +1047,7 @@ index 3aeb0e5..bea0ac9 100644
         # Uses angerman/cardano-node (pruned-mode-mithril) as source, and overrides
         # ouroboros-consensus with the pruned-immutabledb branch via source-repository-package.
         prunedCardanoNodePkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc966";
+          inherit compiler-nix-name;
           src = inputs.pruned-cardano-node;
 
           cabalProjectLocal = ''
@@ -1114,7 +1110,7 @@ index 3aeb0e5..bea0ac9 100644
         };
 
         cardanoCliPkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc966";
+          inherit compiler-nix-name;
           src = inputs.cardano-cli;
 
           cabalProjectLocal = ''
@@ -1154,7 +1150,7 @@ index 3aeb0e5..bea0ac9 100644
           ];
         };
         cardanoAddressesPkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc966";
+          inherit compiler-nix-name;
           src = inputs.cardano-addresses;
           cabalProjectLocal = "";
           inputMap = {
@@ -1190,7 +1186,7 @@ index 3aeb0e5..bea0ac9 100644
           ];
         };
         bech32Pkgs = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc966";
+          inherit compiler-nix-name;
           src = inputs.bech32;
           cabalProjectLocal = "";
           inputMap = {
@@ -1233,7 +1229,7 @@ index 3aeb0e5..bea0ac9 100644
           version = "1.0.0.2";
         };
         cabalPkg = pkgs: pkgs.haskell-nix.project' {
-          compiler-nix-name = "ghc966";
+          inherit compiler-nix-name;
           src = inputs.cabal-install // { filterPath = { path, ... }: path; };
           modules = [
             ({ lib, config, ... }:{
@@ -1406,12 +1402,8 @@ index 3aeb0e5..bea0ac9 100644
           } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
             cardano-tools-static       = pkg (node pkgs.pkgsCross.musl64);
             cardano-tools-static-arm64 = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
-            # Windows cross disabled for 11.1.2: Win32-network 0.2 (required by
-            # ouroboros-consensus 4.2.1.0) wants Win32^>=2.14, but ghc966's
-            # process ships Win32 2.13.3.0. Upstream builds Windows with
-            # ghc9122. Same conflict that disabled -pre in 360deba.
-            # cardano-tools-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
-            # cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
+            cardano-tools-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
+            cardano-tools-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
 
         # cardano-node pre-release builds (tracking 11.1.2)
@@ -1437,9 +1429,8 @@ index 3aeb0e5..bea0ac9 100644
           } // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
             cardano-tools-pre-static       = pkg (node pkgs.pkgsCross.musl64);
             cardano-tools-pre-static-arm64 = pkg (node pkgs.pkgsCross.aarch64-multiplatform-musl);
-            # Windows cross disabled (Win32-network 0.2 vs ghc966 Win32 2.13; same as stable 11.1.2)
-            # cardano-tools-pre-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
-            # cardano-tools-pre-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
+            cardano-tools-pre-ucrt         = pkg (node pkgs.pkgsCross.ucrt64);
+            cardano-tools-pre-mingwW64     = pkg (node pkgs.pkgsCross.mingwW64);
           };
 
         # cardano-node leios-prototype builds (tracking 11.1.0.164 / prototype-2026w36).
@@ -1696,7 +1687,7 @@ index 3aeb0e5..bea0ac9 100644
           nativePackages
           [ linuxCrossPackages kupoPackages hydraPackages
             #dbSyncPackages
-            ogmiosPackages  # ogmios v7.0.0 builds on ghc966 (was disabled while pinned to GHC 8.10.7)
+            ogmiosPackages  # ogmios v7.0.0 (was disabled while pinned to GHC 8.10.7)
             #encoinsPackages -- encoins is pinned to GHC 8.10.7 which haskell.nix no longer supports
             cardanoNodePackages cardanoNodePrePackages cardanoNodeLeiosPackages prunedCardanoNodePackages
             # nixToolsPackages nixToolsPackagesNoIfd
