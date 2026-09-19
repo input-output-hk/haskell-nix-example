@@ -76,7 +76,9 @@
     cardano-addresses.url = "github:IntersectMBO/cardano-addresses?ref=4.0.6";
     cardano-addresses.flake = false;
 
-    bech32.url = "github:IntersectMBO/bech32?ref=v1.1.7";
+    # 1.1.11 (not the v1.1.7 tag): 1.1.7 has base < 4.21 and cannot plan
+    # on ghc9124. 1.1.8+ added GHC 9.12; 1.1.11 is latest (base < 4.23).
+    bech32.url = "github:IntersectMBO/bech32/4624d3a84606615c1ca1410d6dd3fd9213211215";
     bech32.flake = false;
 
     nix-tools.url = "github:input-output-hk/haskell.nix?dir=nix-tools";
@@ -229,9 +231,10 @@
 
         # If we want to use a source-referenced flake we can do this as well
         kupoPkgs = pkgs: pkgs.haskell-nix.project' {
-          # kupo v2.11.0's CI uses ghc948; build on the same cached compiler as
-          # the node bundle (ghc9124). kupo's 2024-10-10 index-state still resolves.
-          inherit compiler-nix-name;
+          # kupo v2.11.0 does not plan on ghc9124 (direct-sqlite vs base-4.21).
+          # ghc967 is the haskell.nix-cached 9.6; kupo's 2024-10-10 index-state
+          # resolves on 9.6.x.
+          compiler-nix-name = "ghc967";
           # strip the package.yaml from the source. haskell.nix's tooling will
           # choke on this special one.
           src = pkgs.haskell-nix.haskellLib.cleanSourceWith {
@@ -406,7 +409,9 @@
           })];
         };
         hydraPkgs = pkgs: pkgs.haskell-nix.project' {
-          inherit compiler-nix-name;
+          # hydra 2.1.0's amazonka-s3 excludes base-4.21 (ghc9124). Stay on
+          # the cached 9.6.7; node/cli remain on ghc9124.
+          compiler-nix-name = "ghc967";
           src = inputs.hydra;
 
           inputMap = {

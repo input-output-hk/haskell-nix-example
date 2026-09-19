@@ -36,17 +36,17 @@
     "bech32": {
       "flake": false,
       "locked": {
-        "lastModified": 1716190741,
-        "narHash": "sha256-U9h6L1OIl8KQCOZKbLaH7ykElhijmb5LKBMCHXGPscU=",
+        "lastModified": 1776673337,
+        "narHash": "sha256-frOF9YN8eIaJNg904zLonNF4v53d63C2G8DE4eNvf9E=",
         "owner": "IntersectMBO",
         "repo": "bech32",
-        "rev": "5a42857dfe454bb27a899f891cac8415d66d0292",
+        "rev": "4624d3a84606615c1ca1410d6dd3fd9213211215",
         "type": "github"
       },
       "original": {
         "owner": "IntersectMBO",
-        "ref": "v1.1.7",
         "repo": "bech32",
+        "rev": "4624d3a84606615c1ca1410d6dd3fd9213211215",
         "type": "github"
       }
     },
